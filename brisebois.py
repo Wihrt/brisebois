@@ -5,7 +5,7 @@ import discord
 # Constants
 # -----------------------------------------------------------------------------
 TOKEN = "MzIzODEyOTE1Nzc2MDYxNDQw.DCAo8Q.QoGVLMskXBB0ouCKjmwBZwa7JzM"
-EXTENSIONS = ["resources.fun"]
+EXTENSIONS = ["resources.fun", "resources.sound"]
 
 # Create the bot
 bot = Bot(command_prefix="$", pm_help=True)
