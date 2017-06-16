@@ -100,4 +100,7 @@ ENV/
 # mypy
 .mypy_cache/
 
-videos/
+# Ignore sounds directory
+sounds/
+# Ignore token.txt file
+token.txt

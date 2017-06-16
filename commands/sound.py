@@ -19,7 +19,7 @@ class Sound(object):
                     "Warning ! The number must be between 1 and 3599")
             voice = await self.bot.join_voice_channel(
                 ctx.message.author.voice_channel)
-            player = voice.create_ffmpeg_player("videos/elevator.mp3")
+            player = voice.create_ffmpeg_player("sounds/elevator.mp3")
             player.start()
             await sleep(seconds)
             await voice.disconnect()
