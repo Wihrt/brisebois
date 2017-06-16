@@ -4,9 +4,8 @@ import discord
 
 # Constants
 # -----------------------------------------------------------------------------
-
 TOKEN_FILE = "token.txt"
-EXTENSIONS = ["commands.fun", "commands.sound"]
+EXTENSIONS = ["commands.fun", "commands.sound", "commands.rng"]
 
 # Create the bot
 bot = Bot(command_prefix="$", pm_help=True)
@@ -35,15 +34,16 @@ async def unload(extension_name):
     await bot.say("{} unloaded.".format(extension_name))
 
 
-@bot.command(hidden=True):
+@bot.command(hidden=True)
 async def reload(extension_name):
     """Reload an extension."""
     try:
-	bot.unload_extension(extension_name)
-	bot.load_extension(extension_name)
+        bot.unload_extension(extension_name)
+        bot.load_extension(extension_name)
     except (AttributeError, ImportError) as e:
-	await bot.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
-    await bot.say("{} reloaded".format(extension_name)
+        await bot.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
+    await bot.say("{} reloaded".format(extension_name))
+
 
 if __name__ == '__main__':
     for extension in EXTENSIONS:
@@ -54,6 +54,6 @@ if __name__ == '__main__':
             print('Failed to load extension {}\n{}'.format(extension, exc))
 
     with open(TOKEN_FILE, "r") as f:
-        token = f.readlines()
+        token = f.readline()
 
     bot.run(token)

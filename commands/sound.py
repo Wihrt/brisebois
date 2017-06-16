@@ -31,6 +31,11 @@ class Sound(object):
             voice = self.bot.voice_client_in(ctx.message.server)
             await voice.disconnect()
 
+    @commands.command(pass_context=True,
+                      help="Pouet")
+    async def nein(self, ctx):
+        pass
+
 
 def setup(bot):
     bot.add_cog(Sound(bot))
