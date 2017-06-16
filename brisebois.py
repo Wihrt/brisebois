@@ -4,6 +4,7 @@ import discord
 
 # Constants
 # -----------------------------------------------------------------------------
+
 TOKEN_FILE = "token.txt"
 EXTENSIONS = ["commands.fun", "commands.sound"]
 
@@ -32,6 +33,7 @@ async def unload(extension_name):
     """Unloads an extension."""
     bot.unload_extension(extension_name)
     await bot.say("{} unloaded.".format(extension_name))
+
 
 @bot.command(hidden=True):
 async def reload(extension_name):
