@@ -1,6 +1,5 @@
 #!/bin/env python
 from discord.ext.commands.bot import Bot
-import discord
 
 # Constants
 # -----------------------------------------------------------------------------

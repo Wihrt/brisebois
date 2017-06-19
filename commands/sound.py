@@ -1,7 +1,6 @@
 #!/bin/env python
 from asyncio import sleep
 from discord.ext import commands
-import discord
 
 
 class Sound(object):
@@ -30,11 +29,6 @@ class Sound(object):
         if self.bot.is_voice_connected(ctx.message.server):
             voice = self.bot.voice_client_in(ctx.message.server)
             await voice.disconnect()
-
-    @commands.command(pass_context=True,
-                      help="Pouet")
-    async def nein(self, ctx):
-        pass
 
 
 def setup(bot):

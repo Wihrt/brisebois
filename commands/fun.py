@@ -4,7 +4,6 @@ from discord import Embed
 from discord.ext import commands
 from random import randint
 from requests import get
-import discord
 
 
 class Fun(object):
