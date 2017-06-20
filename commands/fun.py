@@ -21,6 +21,7 @@ class Fun(object):
         message.add_field(name="Random FML", value=tag.a.getText(),
                           inline=False)
         await self.bot.send_message(ctx.message.channel, embed=message)
+        return
 
     @commands.command(pass_context=True,
                       help="Sand random anecdocte from Vie de Merde")
@@ -32,6 +33,7 @@ class Fun(object):
         message.add_field(name="Random VDM", value=tag.a.getText(),
                           inline=False)
         await self.bot.send_message(ctx.message.channel, embed=message)
+        return
 
     @commands.command(pass_context=True,
                       help="Send random anecdocte from Dans Ton Chat")
@@ -59,12 +61,15 @@ class Fun(object):
         message = Embed()
         message.add_field(name="Random DTC", value=content, inline=False)
         await self.bot.send_message(ctx.message.channel, embed=message)
+        return
 
-    @commands.command(pass_context=True,
+    @commands.command(name="9gag",
+                      pass_context=True,
                       help="Send a random 9gag")
     async def gag(self, ctx):
         response = get("https://9gag.com/random")
         await self.bot.say(response.url)
+        return
 
     @commands.command(pass_context=True,
                       help="Send random gif")
@@ -79,6 +84,7 @@ class Fun(object):
         message = Embed(title=title)
         message.set_image(url=r_json["data"]["image_url"])
         await self.bot.send_message(ctx.message.channel, embed=message)
+        return
 
     @commands.command(pass_context=True,
                       help="Send a random Les joies du code GIF")
@@ -92,6 +98,18 @@ class Fun(object):
         message = Embed(title=title)
         message.set_image(url=img)
         await self.bot.send_message(ctx.message.channel, embed=message)
+        return
+
+    @commands.command(pass_context=True,
+                      help="Send a random XKCD")
+    async def xkcd(self, ctx):
+        response = get("https://c.xkcd.com/random/comic/")
+        soup = BeautifulSoup(response.content, "html.parser")
+        img = soup.find_all("div", id="comic")[0].find_all("img")[0]
+        message = Embed(title=img["title"])
+        message.set_image(url="https:" + img["src"])
+        await self.bot.send_message(ctx.message.channel, embed=message)
+        return
 
 
 def setup(bot):
