@@ -102,5 +102,5 @@ ENV/
 
 # Ignore sounds directory
 sounds/
-# Ignore token.txt file
-token.txt
+# Ignore api_keys.json
+api_keys.json

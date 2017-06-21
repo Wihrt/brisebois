@@ -18,7 +18,8 @@ class Fun(object):
         soup = BeautifulSoup(response.content, "html.parser")
         tag = soup.find_all("p", class_="block")[0]
         message = Embed()
-        message.add_field(name="Random FML", value=tag.a.getText(),
+        message.add_field(name="Random FML",
+                          value=tag.a.getText(),
                           inline=False)
         await self.bot.send_message(ctx.message.channel, embed=message)
         return
@@ -30,7 +31,8 @@ class Fun(object):
         soup = BeautifulSoup(response.content, "html.parser")
         tag = soup.find_all("p", class_="block")[0]
         message = Embed()
-        message.add_field(name="Random VDM", value=tag.a.getText(),
+        message.add_field(name="Random VDM",
+                          value=tag.a.getText(),
                           inline=False)
         await self.bot.send_message(ctx.message.channel, embed=message)
         return
@@ -77,7 +79,7 @@ class Fun(object):
         payload = {"api_key": "dc6zaTOxFJmzC"}
         title = "Random GIF"
         if search:
-            title = "Random " + search + " GIF"
+            title = "Random \"%s\" GIF" % search
             payload["tag"] = search
         response = get("http://api.giphy.com/v1/gifs/random", params=payload)
         r_json = response.json()

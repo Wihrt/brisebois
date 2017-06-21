@@ -31,17 +31,31 @@ Use $help %s to see the list of commands." % ctx.command)
         def is_answer(msg):
             return msg.content.isdigit()
 
-        await self.bot.say("Guess a number between 1 and 100")
+        answers, retries = list(), 20
+        await self.bot.say("Guess a number between 1 and 100\n\
+You have {} tries.".format(retries))
         number = randint(1, 100)
-        while True:
+        while retries > 0:
             msg = await self.bot.wait_for_message(check=is_answer)
-            if int(msg.content) > number:
-                await self.bot.say("Oops ! Too high !")
-            if int(msg.content) < number:
-                await self.bot.say("Oops ! Too low")
-            if int(msg.content) == number:
-                await self.bot.say("You found it !")
-                return
+            if int(msg.content) in answers:
+                await self.bot.say("You already proposed this answer !\n\
+Proposed answers : {}".format(", ".join(list(map(str, answers)))))
+            else:
+                retries -= 1
+                answers.append(int(msg.content))
+                if int(msg.content) > number:
+                    await self.bot.say(
+                        "Oops ! Too high !\{0} tries left".format(retries))
+                if int(msg.content) < number:
+                    await self.bot.say(
+                        "Oops ! Too low !\n{0} tries left".format(retries))
+                if int(msg.content) == number:
+                    await self.bot.say("You found it !")
+                    return
+
+        await self.bot.say(
+            "You didn't found the number !\nIt was : {}".format(number))
+        return
 
     @guess.command(pass_context=True,
                    name="word",
@@ -61,18 +75,30 @@ Use $help %s to see the list of commands." % ctx.command)
         word = get("http://setgetgo.com/randomword/get.php",
                    params=payload).text
         letters = list(set(word))
-        await self.bot.say("Word to guess (%s letters): %s" %
-                           (len(word), word_replace(word, letters)))
+        answers, retries = list(), len(letters) + 5
+        await self.bot.say(
+            "Word to guess ({0} letters): {1}\nYou have {2} tries".format(
+                len(word), word_replace(word, letters), retries))
 
-        while True:
+        while retries > 0:
             msg = await self.bot.wait_for_message(check=is_answer)
-            if msg.content.lower() in letters:
-                letters.remove(msg.content.lower())
-            await self.bot.say("Word to guess (%s letters): %s" %
-                               (len(word), word_replace(word, letters)))
-            if not letters:
-                await self.bot.say("You have found the word !")
-                return
+            if msg.content.upper() in answers:
+                await self.bot.say("You already proposed this answer !\n\
+Proposed answers : {}".format(", ".join(answers)))
+            else:
+                retries -= 1
+                answers.append(msg.content.upper())
+                if msg.content.lower() in letters:
+                    letters.remove(msg.content.lower())
+                await self.bot.say(
+                    "Word to guess ({0} letters): {1}.\n{2} tries left".format(
+                        len(word), word_replace(word, letters), retries))
+                if not letters:
+                    await self.bot.say("You have found the word !")
+                    return
+        await self.bot.say(
+            "You didn't find the word.\nIt was : {0}".format(word.upper()))
+        return
 
     @guess.command(pass_context=True,
                    name="trivia",
