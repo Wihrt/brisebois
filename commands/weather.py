@@ -10,7 +10,6 @@ class Weather(object):
 
     def __init__(self, bot):
         self.bot = bot
-        self.key = "1bd9a2a687793b9c38e9cf3cdd873f44"
 
     @commands.command(pass_context=True,
                       help="Give weathers informations for maps")
