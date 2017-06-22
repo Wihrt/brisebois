@@ -14,31 +14,30 @@ class Weather(object):
     @commands.command(pass_context=True,
                       help="Give weathers informations for maps")
     @commands.cooldown(60, "60.0", BucketType.default)
-    async def weather(self, ctx, *cities):
+    async def weather(self, ctx, *city):
         key = get_key(self.bot.API_KEYS, "weather")
-        for city in cities:
-            payload = dict(q=city, APPID=key, units="metric")
-            json = get("http://api.openweathermap.org/data/2.5/weather",
-                       params=payload).json()
-            message = Embed(
-                title="Weather of {0}, {1}".format(
-                    json["name"], json["sys"]["country"]))
-            message.set_thumbnail(
-                url="https://openweathermap.org/img/w/{}.png".format(
-                    json["weather"][0]["icon"]))
-            message.add_field(
-                name=":partly_sunny:",
-                value=json["weather"][0]["description"].capitalize())
-            message.add_field(
-                name=":thermometer:",
-                value="{} °C".format(json["main"]["temp"]))
-            message.add_field(
-                name=":droplet:",
-                value="{} %".format(json["main"]["humidity"]))
-            message.add_field(
-                name=":dash:",
-                value="{} km/h".format(json["wind"]["speed"]))
-            await self.bot.send_message(ctx.message.channel, embed=message)
+        payload = dict(q=" ".join(city), APPID=key, units="metric")
+        json = get("http://api.openweathermap.org/data/2.5/weather",
+                   params=payload).json()
+        message = Embed(
+            title="Weather of {0}, {1}".format(
+                json["name"], json["sys"]["country"]))
+        message.set_thumbnail(
+            url="https://openweathermap.org/img/w/{}.png".format(
+                json["weather"][0]["icon"]))
+        message.add_field(
+            name=":partly_sunny:",
+            value=json["weather"][0]["description"].capitalize())
+        message.add_field(
+            name=":thermometer:",
+            value="{} °C".format(json["main"]["temp"]))
+        message.add_field(
+            name=":droplet:",
+            value="{} %".format(json["main"]["humidity"]))
+        message.add_field(
+            name=":dash:",
+            value="{} km/h".format(json["wind"]["speed"]))
+        await self.bot.send_message(ctx.message.channel, embed=message)
         return
 
 

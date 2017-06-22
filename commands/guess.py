@@ -24,10 +24,9 @@ Use $help %s to see the list of commands." % ctx.command)
             await self.bot.delete_message(ctx.message)
 
     @guess.command(pass_context=True,
-                   name="number",
                    help="Launch a number guessing game")
     @commands.cooldown(1, "30.0", BucketType.user)
-    async def _number(self, ctx):
+    async def number(self, ctx):
         def is_answer(msg):
             return msg.content.isdigit()
 
@@ -58,10 +57,9 @@ Proposed answers : {}".format(", ".join(list(map(str, answers)))))
         return
 
     @guess.command(pass_context=True,
-                   name="word",
                    help="Launch a hanging man game")
     @commands.cooldown(1, "360.0", BucketType.server)
-    async def _word(self, ctx):
+    async def word(self, ctx):
         def is_answer(msg):
             if len(msg.content) is 1:
                 return msg.content.isalpha()
@@ -101,10 +99,9 @@ Proposed answers : {}".format(", ".join(answers)))
         return
 
     @guess.command(pass_context=True,
-                   name="trivia",
                    help="Give a random trivia question")
     @commands.cooldown(1, "15.0", BucketType.server)
-    async def _trivia(self, ctx):
+    async def trivia(self, ctx):
         def is_answer(msg):
             return msg.content.isdigit()
 
