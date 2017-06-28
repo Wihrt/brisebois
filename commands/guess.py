@@ -44,7 +44,7 @@ Proposed answers : {}".format(", ".join(list(map(str, answers)))))
                 answers.append(int(msg.content))
                 if int(msg.content) > number:
                     await self.bot.say(
-                        "Oops ! Too high !\{0} tries left".format(retries))
+                        "Oops ! Too high !\n{0} tries left".format(retries))
                 if int(msg.content) < number:
                     await self.bot.say(
                         "Oops ! Too low !\n{0} tries left".format(retries))

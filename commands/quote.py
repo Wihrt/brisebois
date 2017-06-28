@@ -2,17 +2,17 @@
 from discord import Embed
 from discord.ext import commands
 from random import shuffle
-import sqlite3
+from pymongo import MongoClient
 
 
 class Quote(object):
 
     def __init__(self, bot):
         self.bot = bot
-        self.db = "db/%s" % "quote.db"
-        self._create_table()
 
-    @commands.group(pass_context=True)
+    @commands.group(pass_context=True,
+                    no_pm=True,
+                    help="Say an random quote")
     async def quote(self, ctx):
         if ctx.invoked_subcommand is None:
             row = self._list_quote(ctx.message.server.id, one=True)
@@ -26,7 +26,9 @@ class Quote(object):
                 await self.bot.send_message(ctx.message.channel, embed=message)
         return
 
-    @quote.command(pass_context=True)
+    @quote.command(pass_context=True,
+                   no_pm=True,
+                   help="Add a quote")
     async def add(self, ctx, quote, quoter=None):
         if len(ctx.message.mentions) is 1:
             server, quoter = ctx.message.server.id, ctx.message.mentions[0].id
@@ -36,7 +38,9 @@ class Quote(object):
         return
 
     @quote.command(pass_context=True,
-                   name="del")
+                   name="del",
+                   no_pm=True,
+                   help="Delete a quote")
     async def delete(self, ctx, message):
         server = ctx.message.server.id
         # There are mentions in the message
@@ -49,7 +53,9 @@ class Quote(object):
             await self.bot.say("Quote deleted")
         return
 
-    @quote.command(pass_context=True)
+    @quote.command(pass_context=True,
+                   no_pm=True,
+                   help="List all quotes")
     async def list(self, ctx, quoter=None):
         server = ctx.message.server.id
         title = "Quote from {}".format(ctx.message.server.name)
@@ -69,59 +75,29 @@ class Quote(object):
             await self.bot.send_message(ctx.message.channel, embed=message)
         return
 
-    def _create_table(self):
-        query = """CREATE TABLE IF NOT EXISTS quotes(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        server VARCHAR(19) NOT NULL,
-        quoter VARCHAR(19),
-        quote TEXT NOT NULL)"""
-        cnx = sqlite3.connect(self.db)
-        cursor = cnx.cursor()
-        cursor.execute(query)
-        cnx.commit()
-        cnx.close()
+    # MongoDB methods
+    def _add_quote(self, server, quote, user=None):
+        quotes = MongoClient().brisebois.quotes
+        doc = dict(server=server, user=user, quote=quote)
+        result = quotes.insert_one(doc)
+        return result.inserted_id
 
-    def _add_quote(self, server, quote, quoter=None):
-        output = False
-        query = """INSERT INTO quotes (server, quote, quoter)
-VALUES(:server, :quote, :quoter)"""
-        cnx = sqlite3.connect(self.db)
-        cursor = cnx.cursor()
-        cursor.execute(query, dict(server=server, quote=quote, quoter=quoter))
-        if cursor.rowcount > 0:
-            output = True
-        cnx.commit()
-        cnx.close()
-        return output
+    def _del_quote(self, server, quote=None, user=None):
+        quotes = MongoClient().brisebois.quotes
+        search = dict(server=server, quote=quote, user=user)
+        search = {k: v for k, v in search.items() if v}
+        result = quotes.delete_many(search)
+        return result.deleted_count
 
-    def _del_quote(self, server, quote=None, quoter=None):
-        output = False
-        cnx = sqlite3.connect(self.db)
-        cursor = cnx.cursor()
-        query = "DELETE FROM quotes WHERE server = :server"
-        if quote:
-            query += " AND quote LIKE :quote"
-        if quoter:
-            query += " AND quoter = :quoter"
-        cursor.execute(query, dict(server=server, quote=quote, quoter=quoter))
-        if cursor.rowcount > 0:
-            output = True
-        cnx.commit()
-        cnx.close()
-        return output
-
-    def _list_quote(self, server, quoter=None, one=False):
-        query = "SELECT quote, quoter from quotes WHERE server = :server"
-        if quoter:
-            query += " AND quoter = :quoter"
-        cnx = sqlite3.connect(self.db)
-        cursor = cnx.cursor()
-        cursor.execute(query, dict(server=server, quoter=quoter))
-        rows = cursor.fetchall()
+    def _list_quote(self, server, user=None, one=False):
+        quotes = MongoClient().brisebois.quotes
+        search = dict(server=server, user=user)
+        search = {k: v for k, v in search.items() if v}
+        results = quotes.find(search)
         if one:
-            shuffle(rows)
-            return rows[0]
-        return rows
+            shuffle(results)
+            return results[0]
+        return results
 
 
 def setup(bot):

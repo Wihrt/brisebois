@@ -1,21 +1,15 @@
 #!/bin/env python
 from discord.ext.commands.bot import Bot
-from lib.utils import get_key
 from os import listdir
 from os.path import splitext
+from pymongo import MongoClient
 from sys import stderr
 from traceback import print_exception
 import discord.ext.commands.errors as err
 
-# Constants
-# -----------------------------------------------------------------------------
-TOKEN_FILE = "token.txt"
-COMMANDS_DIR = "commands"
-
 # Create the bot
 bot = Bot(command_prefix="$",
           pm_help=True)
-bot.API_KEYS = "api_keys.json"
 
 
 @bot.event
@@ -59,14 +53,19 @@ async def on_member_join(member):
 
 
 if __name__ == '__main__':
-    for f in listdir(COMMANDS_DIR):
+    commands_dir = "commands"
+    for f in listdir(commands_dir):
         try:
-            if not f.startswith("__"):
-                extension = "%s.%s" % (COMMANDS_DIR, splitext(f)[0])
+            if not f.startswith("_"):
+                extension = "%s.%s" % (commands_dir, splitext(f)[0])
                 bot.load_extension(extension)
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
-        token = get_key(bot.API_KEYS, "discord")
+
+        client = MongoClient()
+        db = client.brisebois.api_keys
+        entry = db.find_one({"discord": {"$exists": True}})
+        token = entry["discord"]
 
     bot.run(token)

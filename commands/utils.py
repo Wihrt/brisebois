@@ -1,4 +1,6 @@
 #!/bin/env python
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from discord.ext import commands
 
 
@@ -71,3 +73,40 @@ Use $help %s to see the list of commands." % ctx.command)
 
 def setup(bot):
     bot.add_cog(Utils(bot))
+
+
+# Date related functions
+def date_create(days=0, months=0):
+    return datetime.utcnow() + relativedelta(days=days, months=months)
+
+
+def date_check(date, fmt="%Y-%m-%d"):
+    try:
+        datetime.strptime(date, fmt)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+def date_range(date=None, fmt="%Y-%m-%d"):
+    if date_check(date, fmt):
+        date = datetime.strptime(date, fmt)
+    else:
+        date = datetime.utcnow()
+
+    start_date = date.replace(hour=0, minute=0, second=0)
+    end_date = date.replace(hour=23, minute=59, second=59)
+    return start_date, end_date
+
+
+def date_compare(date, reference):
+    if date > reference:
+        return True
+    return False
+
+
+# Discord related functions
+def discord_role(context, role):
+    for r in context.message.server.roles:
+        if r.name == role:
+            return r

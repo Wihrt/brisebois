@@ -41,17 +41,10 @@ class Fun(object):
 
     @commands.command(pass_context=True,
                       help="Send random anecdocte from Dans Ton Chat")
-    async def dtc(self, ctx, number=None):
-        if number:
-            number = int(number)
-            if number not in range(1, 26):
-                return await self.bot.say(
-                    "Warning ! The number must be between 1 and 25")
-
+    async def dtc(self, ctx):
         response = get("http://danstonchat.com/random.html")
         soup = BeautifulSoup(response.content, "html.parser")
-        if not number:
-            number = randint(1, 25)
+        number = randint(1, 25)
         tag = soup.find_all("p", class_="item-content")[number - 1]
         content = ""
         for t in tag.a.contents:
