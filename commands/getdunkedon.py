@@ -1,15 +1,17 @@
 #!/bin/env python
 from discord import Embed
+from discord.utils import get
 from discord.ext import commands
 from pymongo import MongoClient
-from .utils import date_create, date_check, date_range
-from .utils import discord_role
+from .utils import date_create, date_check, date_range, date_compare
+from asyncio import sleep as asleep
 
 
 class GetDunkedOn(object):
 
     def __init__(self, bot):
         self.bot = bot
+        self.bot.loop.create_task(self.check_streak())
 
     @commands.group(pass_context=True,
                     no_pm=True,
@@ -34,7 +36,7 @@ Use $help %s to see the list of commands." % ctx.command)
         else:
             self._add_user(ctx.message.author.id, ctx.message.server.id)
             await self.bot.add_roles(ctx.message.author,
-                                     discord_role(ctx, "GDO"))
+                                     get(ctx.message.server.roles, name="GDO"))
             await self.bot.say(
                 "{0.mention} registered".format(ctx.message.author))
         return
@@ -83,7 +85,7 @@ Use $help %s to see the list of commands." % ctx.command)
                 self._add_image(ctx.message.author.id, ctx.message.server.id,
                                 a["url"], msg.timestamp)
                 self._update_user(ctx.message.author.id, ctx.message.server.id,
-                                  gold=10, streak=1, days=7)
+                                  inc_gold=10, inc_streak=1, days=7)
                 await self.bot.say("Submission added")
         return
 
@@ -94,7 +96,7 @@ Use $help %s to see the list of commands." % ctx.command)
     async def _user_delete(self, ctx):
         self._del_image(ctx.message.author.id, ctx.message.server.id)
         self._update_user(ctx.message.author.id, ctx.message.server.id,
-                          gold=-10, streak=-1, days=6)
+                          inc_gold=-10, inc_streak=-1, days=6)
         await self.bot.say("Submission deleted")
 
     @gdo.command(pass_context=True,
@@ -162,8 +164,9 @@ Use $help %s to see the list of commands." % ctx.command)
     # Generic methods
     async def _unregister(self, user, ctx):
         self._del_user(user.id, ctx.message.server.id)
-        self._del_image(user.id, ctx.message.server.id)
-        await self.bot.remove_roles(user, discord_role(ctx, "GDO"))
+        self._del_image(user.id, ctx.message.server.id, all=True)
+        await self.bot.remove_roles(user,
+                                    get(ctx.message.server.roles, name="GDO"))
         await self.bot.say("{0.mention} unregistered".format(user))
 
     async def _status(self, user, result, ctx):
@@ -180,6 +183,11 @@ Use $help %s to see the list of commands." % ctx.command)
         result = users.find_one(search)
         return result
 
+    def _get_users(self):
+        users = MongoClient().brisebois.gdo_users
+        result = users.find(dict())
+        return result
+
     def _add_user(self, user, server):
         users = MongoClient().brisebois.gdo_users
         doc = dict(user=user, server=server, gold=0, streak=0,
@@ -193,11 +201,20 @@ Use $help %s to see the list of commands." % ctx.command)
         result = users.delete_many(search)
         return result.deleted_count
 
-    def _update_user(self, user, server, gold=0, streak=0, days=0, months=0):
+    def _update_user(self, user, server, inc_gold=0, inc_streak=0, gold=0,
+                     streak=0, days=0, months=0):
         users = MongoClient().brisebois.gdo_users
         search = dict(user=user, server=server)
-        update = {"$inc": dict(gold=gold, streak=streak),
-                  "$set": dict(end_streak=date_create(days, months))}
+        update = {"$inc": dict(gold=inc_gold, streak=inc_streak)}
+        update_set = dict()
+        if gold:
+            update_set["gold"] = gold
+        if streak:
+            update_set["streak"] = streak
+        if days or months:
+            update_set["end_streak"] = date_create(days, months)
+        if update_set:
+            update["$set"] = update_set
         result = users.update_one(search, update)
         result.modified_count
 
@@ -226,6 +243,14 @@ Use $help %s to see the list of commands." % ctx.command)
             search["date"] = {"$gte": start_date, "$lte": end_date}
         result = images.delete_many(search)
         return result.deleted_count
+
+    # Background task
+    async def check_streak(self):
+        while not self.bot.is_closed:
+            for u in self._get_users():
+                if date_compare(u["end_streak"], date_create()):
+                    self._update_user(u["user"], u["server"], streak=0)
+            await asleep(3600)
 
 
 def setup(bot):

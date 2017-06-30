@@ -18,7 +18,8 @@ class Fun(object):
         soup = BeautifulSoup(response.content, "html.parser")
         tag = soup.find_all("p", class_="block")[0]
         message = Embed()
-        message.set_thumbnail(url="https://99clonescripts.com/wp-content/uploads/2014/05/fml-logo.jpg")
+        message.set_thumbnail(url="https://99clonescripts.com/wp-content/\
+uploads/2014/05/fml-logo.jpg")
         message.add_field(name="Random FML",
                           value=tag.a.getText(),
                           inline=False)
@@ -32,7 +33,8 @@ class Fun(object):
         soup = BeautifulSoup(response.content, "html.parser")
         tag = soup.find_all("p", class_="block")[0]
         message = Embed()
-        message.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/f/fc/Logo_vdm.png")
+        message.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/\
+commons/f/fc/Logo_vdm.png")
         message.add_field(name="Random VDM",
                           value=tag.a.getText(),
                           inline=False)
@@ -56,7 +58,8 @@ class Fun(object):
                 content += t
 
         message = Embed()
-        message.set_thumbnail(url="https://pbs.twimg.com/profile_images/686583650708811776/0ApBhP7G.png")
+        message.set_thumbnail(url="https://pbs.twimg.com/profile_images/\
+686583650708811776/0ApBhP7G.png")
         message.add_field(name="Random DTC", value=content, inline=False)
         await self.bot.send_message(ctx.message.channel, embed=message)
         return

@@ -103,10 +103,3 @@ def date_compare(date, reference):
     if date > reference:
         return True
     return False
-
-
-# Discord related functions
-def discord_role(context, role):
-    for r in context.message.server.roles:
-        if r.name == role:
-            return r

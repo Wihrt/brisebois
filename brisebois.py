@@ -14,6 +14,7 @@ bot = Bot(command_prefix="$",
 
 @bot.event
 async def on_ready():
+    """Message to be sent when the bot is ready to receive commands."""
     print("Logged in as %s" % bot.user.name)
 
 
