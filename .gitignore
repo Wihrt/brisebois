@@ -104,4 +104,4 @@ ENV/
 sounds/
 # Ignore api_keys.json
 api_keys.json
-db/*.db
+nohup.out
