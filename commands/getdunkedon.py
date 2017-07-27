@@ -1,4 +1,6 @@
 #!/bin/env python
+from logging import info
+
 from discord import Embed
 from discord.utils import get
 from discord.ext import commands
@@ -248,6 +250,7 @@ Use $help %s to see the list of commands." % ctx.command)
     async def check_streak(self):
         while not self.bot.is_closed:
             for u in self._get_users():
+                info(u)
                 if date_compare(u["end_streak"], date_create()):
                     self._update_user(u["user"], u["server"], streak=0)
             await asleep(3600)

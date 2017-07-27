@@ -1,21 +1,31 @@
 #!/bin/env python
+
+"""Guess Commands module"""
+
+from html import unescape
+from random import randint, shuffle
+
 from discord import Color, Embed
 from discord.ext import commands
 from discord.ext.commands.cooldowns import BucketType
-from html import unescape
-from random import randint, shuffle
 from requests import get
 
 
 class Guess(object):
+    """Implements Guess commands"""
 
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(pass_context=True,
-                    no_pm=True,
-                    help="Launch a new guessing game")
+    @commands.group(pass_context=True, no_pm=True)
     async def guess(self, ctx):
+        """Launch a new guessing game
+
+        Args:
+            ctx: Context of the message
+
+        Returns: None
+        """
         if ctx.invoked_subcommand is None:
             await self.bot.send_message(
                 ctx.message.author,
@@ -23,11 +33,16 @@ class Guess(object):
 Use $help %s to see the list of commands." % ctx.command)
             await self.bot.delete_message(ctx.message)
 
-    @guess.command(pass_context=True,
-                   help="Launch a number guessing game")
+    @guess.command()
     @commands.cooldown(1, "30.0", BucketType.user)
-    async def number(self, ctx):
-        def is_answer(msg):
+    async def number(self):
+        """Launch a number guessing game
+
+        Args:
+
+        Returns: None
+        """
+        def _is_answer(msg):
             return msg.content.isdigit()
 
         answers, retries = list(), 20
@@ -35,7 +50,7 @@ Use $help %s to see the list of commands." % ctx.command)
 You have {} tries.".format(retries))
         number = randint(1, 100)
         while retries > 0:
-            msg = await self.bot.wait_for_message(check=is_answer)
+            msg = await self.bot.wait_for_message(check=_is_answer)
             if int(msg.content) in answers:
                 await self.bot.say("You already proposed this answer !\n\
 Proposed answers : {}".format(", ".join(list(map(str, answers)))))
@@ -56,17 +71,22 @@ Proposed answers : {}".format(", ".join(list(map(str, answers)))))
             "You didn't found the number !\nIt was : {}".format(number))
         return
 
-    @guess.command(pass_context=True,
-                   help="Launch a hanging man game")
+    @guess.command()
     @commands.cooldown(1, "360.0", BucketType.server)
-    async def word(self, ctx):
-        def is_answer(msg):
+    async def word(self):
+        """Launch a word guessing game
+
+        Args:
+
+        Returns: None
+        """
+        def _is_answer(msg):
             if len(msg.content) is 1:
                 return msg.content.isalpha()
 
-        def word_replace(word, letters):
-            for l in letters:
-                word = word.replace(l, "?")
+        def _word_replace(word, letters):
+            for letter in letters:
+                word = word.replace(letter, "?")
             return word.upper()
 
         payload = dict(len=randint(3, 20))
@@ -76,10 +96,10 @@ Proposed answers : {}".format(", ".join(list(map(str, answers)))))
         answers, retries = list(), len(letters) + 5
         await self.bot.say(
             "Word to guess ({0} letters): {1}\nYou have {2} tries".format(
-                len(word), word_replace(word, letters), retries))
+                len(word), _word_replace(word, letters), retries))
 
         while retries > 0:
-            msg = await self.bot.wait_for_message(check=is_answer)
+            msg = await self.bot.wait_for_message(check=_is_answer)
             if msg.content.upper() in answers:
                 await self.bot.say("You already proposed this answer !\n\
 Proposed answers : {}".format(", ".join(answers)))
@@ -90,7 +110,7 @@ Proposed answers : {}".format(", ".join(answers)))
                     letters.remove(msg.content.lower())
                 await self.bot.say(
                     "Word to guess ({0} letters): {1}.\n{2} tries left".format(
-                        len(word), word_replace(word, letters), retries))
+                        len(word), _word_replace(word, letters), retries))
                 if not letters:
                     await self.bot.say("You have found the word !")
                     return
@@ -98,17 +118,22 @@ Proposed answers : {}".format(", ".join(answers)))
             "You didn't find the word.\nIt was : {0}".format(word.upper()))
         return
 
-    @guess.command(pass_context=True,
-                   help="Give a random trivia question")
+    @guess.command(pass_context=True)
     @commands.cooldown(1, "15.0", BucketType.server)
     async def trivia(self, ctx):
-        def is_answer(msg):
+        """Give a random trivia question
+        Args:
+            ctx: Context of the message
+
+        Returns: None
+        """
+        def _is_answer(msg):
             return msg.content.isdigit()
 
-        def format_answers(answers):
+        def _format_answers(answers):
             message, i = str(), 1
-            for a in answers:
-                message += "**%s.** %s\n" % (i, a)
+            for answer in answers:
+                message += "**%s.** %s\n" % (i, answer)
                 i += 1
             return message
 
@@ -120,11 +145,11 @@ Proposed answers : {}".format(", ".join(answers)))
 
         message = Embed()
         message.add_field(name=unescape(json["question"]),
-                          value=format_answers(answers),
+                          value=_format_answers(answers),
                           inline=False)
         await self.bot.send_message(ctx.message.channel, embed=message)
 
-        msg = await self.bot.wait_for_message(check=is_answer,
+        msg = await self.bot.wait_for_message(check=_is_answer,
                                               timeout=15.0)
         if msg is None:
             message = Embed(color=Color.red())
@@ -145,4 +170,12 @@ Proposed answers : {}".format(", ".join(answers)))
 
 
 def setup(bot):
+    """Add commands to the bot.
+
+    Args:
+        bot: Bot which will add the commands
+
+    Returns:
+        None
+    """
     bot.add_cog(Guess(bot))

@@ -1,94 +1,134 @@
 #!/bin/env python
+
+"""Brisebois Discord Bot"""
+
+# Imports
 from datetime import datetime
-from discord.ext.commands.bot import Bot
-from logging import getLogger, FileHandler, info, DEBUG, INFO
-from os import listdir
-from os.path import splitext
-from pymongo import MongoClient
+from logging import getLogger, FileHandler, info, critical, INFO
 from sys import stderr
 from traceback import print_tb
-import discord.ext.commands.errors as err
 
-# Logging
-discord_logger = getLogger('discord')
-# discord_logger.setLevel(DEBUG)
-discord_logger.setLevel(INFO)
-log = getLogger()
-# log.setLevel(DEBUG)
-log.setLevel(INFO)
-handler = FileHandler(filename='brisebois.log', encoding='utf-8', mode='w')
-log.addHandler(handler)
-
+from discord.ext.commands import bot, errors
+from pymongo import MongoClient
 
 # Create the bot
-bot = Bot(command_prefix="$", pm_help=True)
+BOT = bot.Bot(command_prefix="$", pm_help=True)
+# Extensions to load
+EXTENSIONS = ["commands.fun",
+              "commands.guess",
+              "commands.quote",
+              "commands.rng",
+              "commands.utils",
+              "commands.weather"]
 
 
-@bot.event
-async def on_ready():
+def init_logger(level: int) -> None:
+    """Set the logging of the bot
+
+    Args:
+        level: Level of the logging
+
+    Returns:
+        None
+    """
+    discord_logger = getLogger("discord")
+    discord_logger.setLevel(level)
+    root_logger = getLogger()
+    root_logger.setLevel(level)
+    handler = FileHandler(filename="brisebois.log", encoding="utf-8", mode="w")
+    root_logger.addHandler(handler)
+
+
+def get_token() -> str:
+    """Gets the Token for Discord
+
+    Args:
+
+    Returns:
+        str: Token of the bot
+    """
+    client = MongoClient()
+    database = client.brisebois.api_keys
+    entry = database.find_one({"discord": {"$exists": True}})
+    return entry["discord"]
+
+
+@BOT.event
+async def on_ready() -> None:
+    """Called when bot starts.
+
+    Args:
+
+    Returns:
+        None
+    """
     info('Logged in as:')
-    info('Username: ' + bot.user.name)
-    info('ID: ' + bot.user.id)
+    info('Username: ' + BOT.user.name)
+    info('ID: ' + BOT.user.id)
     info('------')
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.utcnow()
 
 
-@bot.event
-async def on_command(command, ctx):
-    info("Command : {0.command} called".format(ctx))
+@BOT.event
+async def on_command(command, ctx) -> None:
+    """Called when command is sent.
+
+    Args:
+        command: Command in the message
+        ctx: Context of the message
+
+    Returns:
+        None
+    """
     info("Message : {0.content}".format(ctx.message))
 
 
-@bot.event
-async def on_command_error(error, ctx):
-    if isinstance(error, err.NoPrivateMessage):
-        await bot.send_message(
+@BOT.event
+async def on_command_error(error, ctx) -> None:
+    """Called when command throws an exception.
+
+    Args:
+        error: Exception sent by the command
+        ctx: Content of the message
+
+    Returns:
+        None
+    """
+    if isinstance(error, errors.NoPrivateMessage):
+        await BOT.send_message(
             ctx.message.author,
             "This command cannot be used in private messages.")
-    elif isinstance(error, err.CommandOnCooldown):
-        await bot.send_message(
+    elif isinstance(error, errors.CommandOnCooldown):
+        await BOT.send_message(
             ctx.message.author,
             "This command is on cooldown, retry after {} seconds".format(
                 error.retry_after))
-    elif isinstance(error, err.DisabledCommand):
-        await bot.send_message(
+    elif isinstance(error, errors.DisabledCommand):
+        await BOT.send_message(
             ctx.message.author,
             "Sorry. This command is disabled and cannot be used.")
-    elif isinstance(error, err.CommandNotFound):
-        await bot.send_message(
+    elif isinstance(error, errors.CommandNotFound):
+        await BOT.send_message(
             ctx.message.author,
             "No command {} is found\n\
 Use $help to see the list of commands".format(ctx.message.content))
-        await bot.delete_message(ctx.message)
-    elif isinstance(error, err.CommandInvokeError):
+        await BOT.delete_message(ctx.message)
+    elif isinstance(error, errors.CommandInvokeError):
         print('In {0.command.qualified_name}:'.format(ctx), file=stderr)
         print_tb(error.original.__traceback__)
         print('{0.__class__.__name__}: {0}'.format(error.original),
               file=stderr)
 
 
-@bot.event
-async def on_member_join(member):
-        server = member.server
-        fmt = "Welcome {0.mention} to {1.name} !"
-        await bot.send_message(server, fmt.format(member, server))
-
-
 if __name__ == '__main__':
-    commands_dir = "commands"
-    for f in listdir(commands_dir):
+    init_logger(INFO)
+    for extension in EXTENSIONS:
         try:
-            if not f.startswith("_"):
-                extension = "%s.%s" % (commands_dir, splitext(f)[0])
-                bot.load_extension(extension)
-        except Exception as e:
-            exc = '{}: {}'.format(type(e).__name__, e)
-            print('Failed to load extension {}\n{}'.format(extension, exc))
+            BOT.load_extension(extension)
+        except ImportError as err:
+            exc = '{}: {}'.format(type(err).__name__, err)
+            critical('Failed to load extension {}\n{}'.format(extension, exc))
 
-        client = MongoClient()
-        db = client.brisebois.api_keys
-        entry = db.find_one({"discord": {"$exists": True}})
-        token = entry["discord"]
-
-    bot.run(token)
+    TOKEN = get_token()
+    BOT.run(TOKEN)
