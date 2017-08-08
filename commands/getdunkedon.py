@@ -202,8 +202,8 @@ Use $help %s to see the list of commands." % ctx.command)
         result = users.delete_many(search)
         return result.deleted_count
 
-    def _update_user(self, user, server, inc_gold=None, inc_streak=None, gold=None,
-                     streak=None, days=None, months=None):
+    def _update_user(self, user, server, inc_gold=None, inc_streak=None,
+                     gold=None, streak=None, days=None, months=None):
         users = MongoClient().brisebois.gdo_users
         search = dict(user=user, server=server)
         update = dict()
