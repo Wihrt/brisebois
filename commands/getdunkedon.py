@@ -1,6 +1,5 @@
 #!/bin/env python
 from asyncio import sleep as asleep
-from logging import info
 
 from discord import Embed
 from discord.utils import get
@@ -203,17 +202,26 @@ Use $help %s to see the list of commands." % ctx.command)
         result = users.delete_many(search)
         return result.deleted_count
 
-    def _update_user(self, user, server, inc_gold=0, inc_streak=0, gold=0,
-                     streak=0, days=0, months=0):
+    def _update_user(self, user, server, inc_gold=None, inc_streak=None, gold=None,
+                     streak=None, days=None, months=None):
         users = MongoClient().brisebois.gdo_users
         search = dict(user=user, server=server)
-        update = {"$inc": dict(gold=inc_gold, streak=inc_streak)}
+        update = dict()
+
+        update_inc = dict()
+        if isinstance(inc_gold, int):
+            update_inc["gold"] = inc_gold
+        if isinstance(inc_streak, int):
+            update_inc["streak"] = inc_streak
+        if update_inc:
+            update["$inc"] = update_inc
+
         update_set = dict()
-        if gold:
+        if isinstance(gold, int):
             update_set["gold"] = gold
-        if streak:
+        if isinstance(streak, int):
             update_set["streak"] = streak
-        if days or months:
+        if isinstance(days, int) or isinstance(months, int):
             update_set["end_streak"] = date_create(days, months)
         if update_set:
             update["$set"] = update_set
@@ -250,7 +258,6 @@ Use $help %s to see the list of commands." % ctx.command)
     async def check_streak(self):
         while not self.bot.is_closed:
             for u in self._get_users():
-                info(u)
                 if date_compare(u["end_streak"], date_create()):
                     self._update_user(u["user"], u["server"], streak=0)
             await asleep(3600)

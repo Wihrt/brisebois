@@ -67,7 +67,7 @@ Use $help %s to see the list of commands." % ctx.command)
         return
 
     @cmd.command()
-    async def _reload(self, extension_name):
+    async def reload(self, extension_name):
         """Reloads an extension
 
         Args:
@@ -167,6 +167,6 @@ def date_compare(date, reference):
 
     Return: bool
     """
-    if date > reference:
+    if date < reference:
         return True
     return False

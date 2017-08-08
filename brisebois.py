@@ -19,7 +19,8 @@ EXTENSIONS = ["commands.fun",
               "commands.quote",
               "commands.rng",
               "commands.utils",
-              "commands.weather"]
+              "commands.weather",
+              "commands.getdunkedon"]
 
 
 def init_logger(level: int) -> None:
