@@ -1,4 +1,5 @@
 #!/bin/env python
+from asyncio import sleep as asleep
 from logging import info
 
 from discord import Embed
@@ -6,7 +7,6 @@ from discord.utils import get
 from discord.ext import commands
 from pymongo import MongoClient
 from .utils import date_create, date_check, date_range, date_compare
-from asyncio import sleep as asleep
 
 
 class GetDunkedOn(object):
@@ -153,7 +153,7 @@ Use $help %s to see the list of commands." % ctx.command)
                   name="delete",
                   help="Remove submission for users")
     async def _moderator_delete(self, ctx, date):
-        if self._check_date(date):
+        if date_check(date):
             for user in ctx.message.mentions:
 
                 self._del_image(user.id, ctx.message.server.id, date)
@@ -166,7 +166,7 @@ Use $help %s to see the list of commands." % ctx.command)
     # Generic methods
     async def _unregister(self, user, ctx):
         self._del_user(user.id, ctx.message.server.id)
-        self._del_image(user.id, ctx.message.server.id, all=True)
+        self._del_image(user.id, ctx.message.server.id, all_images=True)
         await self.bot.remove_roles(user,
                                     get(ctx.message.server.roles, name="GDO"))
         await self.bot.say("{0.mention} unregistered".format(user))
@@ -218,7 +218,7 @@ Use $help %s to see the list of commands." % ctx.command)
         if update_set:
             update["$set"] = update_set
         result = users.update_one(search, update)
-        result.modified_count
+        return result.modified_count
 
     def _get_image(self, user, server, date=None):
         images = MongoClient().brisebois.gdo_images
@@ -234,13 +234,13 @@ Use $help %s to see the list of commands." % ctx.command)
         result = images.insert_one(doc)
         return result.inserted_id
 
-    def _del_image(self, user, server, date=None, all=False):
+    def _del_image(self, user, server, date=None, all_images=False):
         images = MongoClient().brisebois.gdo_images
         if date:
             if not date_check(date):
                 return None
         search = dict(user=user, server=server)
-        if not all:
+        if not all_images:
             start_date, end_date = date_range(date)
             search["date"] = {"$gte": start_date, "$lte": end_date}
         result = images.delete_many(search)
