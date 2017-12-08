@@ -1,0 +1,4 @@
+discord.py[voice]
+bs4
+requests
+pymongo

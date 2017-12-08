@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+  bot:
+    build: .
+    networks:
+      - internal
+    volumes:
+      - bot-log:/brisebois/log
+
+  mongo:
+    image: mongodb:3.6-jessie
+    networks:
+      - internal
+    volumes:
+      - mongo-conf:/data/configdb
+      - mongo-data:/data/db
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  bot-log: {}
+  mongo-conf: {}
+  mongo-data: {}

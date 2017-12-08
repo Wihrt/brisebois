@@ -23,30 +23,25 @@ EXTENSIONS = ["commands.fun",
               "commands.getdunkedon"]
 
 
-def init_logger(level: int) -> None:
-    """Set the logging of the bot
+def init_logger(level=INFO):
+    """Initialize the logger and sets it to the level specified
 
-    Args:
-        level: Level of the logging
-
-    Returns:
-        None
+    Keyword Arguments:
+        level {int} -- Level of the logger (default: {INFO})
     """
     discord_logger = getLogger("discord")
     discord_logger.setLevel(level)
     root_logger = getLogger()
     root_logger.setLevel(level)
-    handler = FileHandler(filename="brisebois.log", encoding="utf-8", mode="w")
+    handler = FileHandler(filename="log/bot.log", encoding="utf-8", mode="w")
     root_logger.addHandler(handler)
 
 
-def get_token() -> str:
-    """Gets the Token for Discord
-
-    Args:
+def get_token():
+    """Get the Discord tokoen from MongoDB
 
     Returns:
-        str: Token of the bot
+        str -- Discord Token
     """
     client = MongoClient()
     database = client.brisebois.api_keys
@@ -55,14 +50,8 @@ def get_token() -> str:
 
 
 @BOT.event
-async def on_ready() -> None:
-    """Called when bot starts.
-
-    Args:
-
-    Returns:
-        None
-    """
+async def on_ready():
+    """Called when the bot starts"""    
     info('Logged in as:')
     info('Username: ' + BOT.user.name)
     info('ID: ' + BOT.user.id)
@@ -72,30 +61,8 @@ async def on_ready() -> None:
 
 
 @BOT.event
-async def on_command(command, ctx) -> None:
-    """Called when command is sent.
-
-    Args:
-        command: Command in the message
-        ctx: Context of the message
-
-    Returns:
-        None
-    """
-    info("Message : {0.content}".format(ctx.message))
-
-
-@BOT.event
-async def on_command_error(error, ctx) -> None:
-    """Called when command throws an exception.
-
-    Args:
-        error: Exception sent by the command
-        ctx: Content of the message
-
-    Returns:
-        None
-    """
+async def on_command_error(error, ctx):
+    """Called when a command send an error"""
     if isinstance(error, errors.NoPrivateMessage):
         await BOT.send_message(
             ctx.message.author,
