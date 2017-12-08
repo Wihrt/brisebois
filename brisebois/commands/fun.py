@@ -17,8 +17,8 @@ class Fun(object):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True)
-    async def fml(self, ctx) -> None:
+    @commands.command()
+    async def fml(self, ctx):
         """Send random anecdocte from Fuck My Life
 
         Args:
@@ -36,10 +36,10 @@ uploads/2014/05/fml-logo.jpg")
         message.add_field(name="Random FML",
                           value=tag.a.getText(),
                           inline=False)
-        await self.bot.send_message(ctx.message.channel, embed=message)
+        await ctx.channel.send(embed=message)
 
-    @commands.command(pass_context=True)
-    async def vdm(self, ctx) -> None:
+    @commands.command()
+    async def vdm(self, ctx):
         """Send random anecdocte from Vie de Merde
 
         Args:
@@ -57,10 +57,11 @@ commons/f/fc/Logo_vdm.png")
         message.add_field(name="Random VDM",
                           value=tag.a.getText(),
                           inline=False)
+        await ctx.channel.send(embed=message)
         await self.bot.send_message(ctx.message.channel, embed=message)
 
-    @commands.command(pass_context=True)
-    async def dtc(self, ctx) -> None:
+    @commands.command()
+    async def dtc(self, ctx):
         """Send random anecdocte from Dans Ton Chat
 
         Args:
@@ -84,10 +85,10 @@ commons/f/fc/Logo_vdm.png")
         message.set_thumbnail(url="https://pbs.twimg.com/profile_images/\
 686583650708811776/0ApBhP7G.png")
         message.add_field(name="Random DTC", value=content, inline=False)
-        await self.bot.send_message(ctx.message.channel, embed=message)
+        await ctx.channel.send(embed=message)
 
-    @commands.command(name="9gag", pass_context=True)
-    async def gag(self) -> None:
+    @commands.command(name="9gag")
+    async def gag(self, ctx):
         """Send a random 9gag
 
         Args:
@@ -96,10 +97,10 @@ commons/f/fc/Logo_vdm.png")
             None
         """
         response = get("https://9gag.com/random")
-        await self.bot.say(response.url)
+        await ctx.channel.send(response.url)
 
-    @commands.command(pass_context=True)
-    async def gif(self, ctx, search=None) -> None:
+    @commands.command()
+    async def gif(self, ctx, search=None):
         """Send a random gif
 
         Args:
@@ -118,10 +119,10 @@ commons/f/fc/Logo_vdm.png")
         r_json = response.json()
         message = Embed(title=title)
         message.set_image(url=r_json["data"]["image_url"])
-        await self.bot.send_message(ctx.message.channel, embed=message)
+        await ctx.channel.send(embed=message)
 
-    @commands.command(pass_context=True)
-    async def ljdc(self, ctx) -> None:
+    @commands.command()
+    async def ljdc(self, ctx):
         """Send a random Les joies du code GIF
 
         Args:
@@ -138,9 +139,9 @@ commons/f/fc/Logo_vdm.png")
             "div", class_="blog-post-content")[0].find_all("img")[0]["src"]
         message = Embed(title=title)
         message.set_image(url=img)
-        await self.bot.send_message(ctx.message.channel, embed=message)
+        await ctx.channel.send(embed=message)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def xkcd(self, ctx) -> None:
         """Send a random XKCD
 
@@ -150,13 +151,12 @@ commons/f/fc/Logo_vdm.png")
         Returns:
             None
         """
-
         response = get("https://c.xkcd.com/random/comic/")
         soup = BeautifulSoup(response.content, "html.parser")
         img = soup.find_all("div", id="comic")[0].find_all("img")[0]
         message = Embed(title=img["title"])
         message.set_image(url="https:" + img["src"])
-        await self.bot.send_message(ctx.message.channel, embed=message)
+        await ctx.channel.send(embed=message)
 
 
 def setup(bot) -> None:

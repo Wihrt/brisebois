@@ -51,7 +51,7 @@ def get_token():
 
 @BOT.event
 async def on_ready():
-    """Called when the bot starts"""    
+    """Called when the bot starts"""
     info('Logged in as:')
     info('Username: ' + BOT.user.name)
     info('ID: ' + BOT.user.id)
@@ -61,27 +61,19 @@ async def on_ready():
 
 
 @BOT.event
-async def on_command_error(error, ctx):
+async def on_command_error(ctx, error):
     """Called when a command send an error"""
     if isinstance(error, errors.NoPrivateMessage):
-        await BOT.send_message(
-            ctx.message.author,
-            "This command cannot be used in private messages.")
+        await ctx.author.send("This command cannot be used in private messages.")
     elif isinstance(error, errors.CommandOnCooldown):
-        await BOT.send_message(
-            ctx.message.author,
+        await ctx.author.send(
             "This command is on cooldown, retry after {} seconds".format(
                 error.retry_after))
     elif isinstance(error, errors.DisabledCommand):
-        await BOT.send_message(
-            ctx.message.author,
-            "Sorry. This command is disabled and cannot be used.")
+        await ctx.author.send("This command is disabled and cannot be used.")
     elif isinstance(error, errors.CommandNotFound):
-        await BOT.send_message(
-            ctx.message.author,
-            "No command {} is found\n\
-Use $help to see the list of commands".format(ctx.message.content))
-        await BOT.delete_message(ctx.message)
+        await ctx.author.send("Unknown command. Use $help to get commands")
+        await ctx.message.delete()
     elif isinstance(error, errors.CommandInvokeError):
         print('In {0.command.qualified_name}:'.format(ctx), file=stderr)
         print_tb(error.original.__traceback__)

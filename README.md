@@ -1,2 +1,3 @@
-# brisebois
-Discord Bot using discord.py
+## Brisebois
+
+A Discord Bot using discord.py
