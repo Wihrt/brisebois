@@ -56,7 +56,7 @@ Proposed answers : {}".format(", ".join(list(map(str, answers)))))
                 answers.append(int(msg.content))
                 if int(msg.content) > number:
                     await ctx.channel.send(
-                        "Oops ! Too high !\n{0} tries left".format(retries)))
+                        "Oops ! Too high !\n{0} tries left".format(retries))
                 if int(msg.content) < number:
                     await ctx.channel.send(
                         "Oops ! Too low !\n{0} tries left".format(retries))
@@ -70,7 +70,7 @@ Proposed answers : {}".format(", ".join(list(map(str, answers)))))
 
     @guess.command()
     @commands.cooldown(1, "360.0", BucketType.server)
-    async def word(self):
+    async def word(self, ctx):
         """Launch a word guessing game
 
         Args:
