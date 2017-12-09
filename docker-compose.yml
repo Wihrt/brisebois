@@ -9,7 +9,7 @@ services:
       - bot-log:/brisebois/log
 
   mongo:
-    image: mongodb:3.6-jessie
+    image: mongo:3.6-jessie
     networks:
       - internal
     volumes:
