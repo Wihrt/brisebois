@@ -13,6 +13,7 @@ services:
     networks:
       - internal
     volumes:
+      - ./mongo:/docker-entrypoint-initdb.d/
       - mongo-conf:/data/configdb
       - mongo-data:/data/db
 
