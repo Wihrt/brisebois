@@ -7,9 +7,14 @@ services:
       - internal
     volumes:
       - bot-log:/brisebois/log
+    depends_on:
+      - mongo
 
   mongo:
     image: mongo:3.6-jessie
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeit
     networks:
       - internal
     volumes:

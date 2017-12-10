@@ -1,1 +1,2 @@
-brisebois;api_keys;api_keys.json
+# Database;Collection;JSON File
+brisebois;api_keys;/docker-entrypoint-initdb.d/api_keys.json

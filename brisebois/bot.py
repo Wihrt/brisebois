@@ -32,7 +32,7 @@ def init_logger(level=INFO):
     discord_logger.setLevel(level)
     root_logger = getLogger()
     root_logger.setLevel(level)
-    handler = FileHandler(filename="log/bot.log", encoding="utf-8", mode="w")
+    handler = FileHandler(filename="/brisebois/log/bot.log", encoding="utf-8", mode="w")
     root_logger.addHandler(handler)
 
 
@@ -82,6 +82,7 @@ async def on_command_error(ctx, error):
 
 if __name__ == '__main__':
     init_logger(INFO)
+    # Add support for netcat and wait for MongoDB before it starts
     for extension in EXTENSIONS:
         try:
             BOT.load_extension(extension)
