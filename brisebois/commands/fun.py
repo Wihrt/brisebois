@@ -19,14 +19,7 @@ class Fun(object):
 
     @commands.command()
     async def fml(self, ctx):
-        """Send random anecdocte from Fuck My Life
-
-        Args:
-            ctx: Context of the message
-
-        Return:
-            None
-        """
+        """Send random anecdocte from Fuck My Life"""
         response = get("https://www.fmylife.com/random")
         soup = BeautifulSoup(response.content, "html.parser")
         tag = soup.find_all("p", class_="block")[0]
@@ -40,14 +33,7 @@ uploads/2014/05/fml-logo.jpg")
 
     @commands.command()
     async def vdm(self, ctx):
-        """Send random anecdocte from Vie de Merde
-
-        Args:
-            ctx: Context of the message
-
-        Returns:
-            None
-        """
+        """Send random anecdocte from Vie de Merde"""
         response = get("https://www.viedemerde.fr/aleatoire")
         soup = BeautifulSoup(response.content, "html.parser")
         tag = soup.find_all("p", class_="block")[0]
@@ -62,13 +48,7 @@ commons/f/fc/Logo_vdm.png")
 
     @commands.command()
     async def dtc(self, ctx):
-        """Send random anecdocte from Dans Ton Chat
-
-        Args:
-            ctx : Context of the message
-
-        Returns : None
-        """
+        """Send random anecdocte from Dans Ton Chat"""
         response = get("http://danstonchat.com/random.html")
         soup = BeautifulSoup(response.content, "html.parser")
         quote = soup.find_all("p", class_="item-content")[randint(1, 25) - 1]
@@ -89,27 +69,13 @@ commons/f/fc/Logo_vdm.png")
 
     @commands.command(name="9gag")
     async def gag(self, ctx):
-        """Send a random 9gag
-
-        Args:
-
-        Returns:
-            None
-        """
+        """Send a random 9gag"""
         response = get("https://9gag.com/random")
         await ctx.channel.send(response.url)
 
     @commands.command()
     async def gif(self, ctx, search=None):
-        """Send a random gif
-
-        Args:
-            ctx: Context of the message
-            search (str): Word to search
-
-        Returns:
-            None
-        """
+        """Send a random GIF"""
         payload = {"api_key": "dc6zaTOxFJmzC"}
         title = "Random GIF"
         if search:
@@ -123,14 +89,7 @@ commons/f/fc/Logo_vdm.png")
 
     @commands.command()
     async def ljdc(self, ctx):
-        """Send a random Les joies du code GIF
-
-        Args:
-            ctx: Context of the message
-
-        Returns:
-            None
-        """
+        """Send a random Les joies du code GIF"""
         response = get("http://lesjoiesducode.fr/random")
         soup = BeautifulSoup(response.content, "html.parser")
         title = soup.find_all(
@@ -143,14 +102,7 @@ commons/f/fc/Logo_vdm.png")
 
     @commands.command()
     async def xkcd(self, ctx) -> None:
-        """Send a random XKCD
-
-        Args:
-            ctx: Context of the message
-
-        Returns:
-            None
-        """
+        """Send a random XKCD"""
         response = get("https://c.xkcd.com/random/comic/")
         soup = BeautifulSoup(response.content, "html.parser")
         img = soup.find_all("div", id="comic")[0].find_all("img")[0]
@@ -160,12 +112,4 @@ commons/f/fc/Logo_vdm.png")
 
 
 def setup(bot) -> None:
-    """Add commands to the bot.
-
-    Args:
-        bot: Bot which will add the commands
-
-    Returns:
-        None
-    """
     bot.add_cog(Fun(bot))

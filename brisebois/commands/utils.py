@@ -13,90 +13,51 @@ class Utils(object):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(pass_context=True, hidden=True)
+    @commands.group()
     @commands.has_permissions(administrator=True)
     async def cmd(self, ctx):
-        """Administrative function
-
-        Args:
-            ctx: Context of the message
-
-        Returns: None
-        """
+        """Administrative function"""
         await self.bot.delete_message(ctx.message)
         if ctx.invoked_subcommand is None:
-            await self.bot.send_message(
-                ctx.message.author,
-                "No subcommand specified\n\
-Use $help %s to see the list of commands." % ctx.command)
-            await self.bot.delete_message(ctx.message)
+            await ctx.channel.send("No subcommand specified\n\
+Use `{}help {}` to see the list of commands.".format(ctx.prefix, ctx.command))
+            await ctx.message.delete()
 
     @cmd.command()
-    async def load(self, extension_name):
-        """Loads an extension
-
-        Args:
-            ctx: Context of the message
-            extension_name (str): Name of the extension to load
-
-        Returns: None
-        """
+    async def load(self, ctx, extension_name):
+        """Loads an extension"""
         extension_name = "commands." + extension_name
         try:
             self.bot.load_extension(extension_name)
+            await ctx.author.send("{} loaded.".format(extension_name))
         except(AttributeError, ImportError) as err:
-            await self.bot.whisper("```py\n%s: %s\n```" %
-                                   (type(err).__name__, str(err)))
-            return
-        await self.bot.whisper("{} loaded.".format(extension_name))
-        return
+            await ctx.author.send("```py\n%s: %s\n```" %
+                                  (type(err).__name__, str(err)))
 
     @cmd.command()
-    async def unload(self, extension_name):
-        """Unloads an extension
-
-        Args:
-            ctx: Context of the message
-            extension_name (str): Name of the extension to unload
-
-        Returns: None
-        """
+    async def unload(self, ctx, extension_name):
+        """Unloads an extension"""
         extension_name = "commands." + extension_name
         self.bot.unload_extension(extension_name)
-        await self.bot.whisper("{} unloaded.".format(extension_name))
-        return
+        await ctx.author.send("{} unloaded.".format(extension_name))
 
     @cmd.command()
-    async def reload(self, extension_name):
-        """Reloads an extension
-
-        Args:
-            ctx: Context of the message
-            extension_name (str): Name of the extension to reload
-
-        Returns: None
-        """
+    async def reload(self, ctx, extension_name):
+        """Reloads an extension"""
         extension_name = "commands." + extension_name
         try:
             self.bot.unload_extension(extension_name)
             self.bot.load_extension(extension_name)
+            await self.bot.whisper("{} reloaded".format(extension_name))
         except (AttributeError, ImportError) as err:
-            await self.bot.whisper("```py\n%s: %s\n```" %
-                                   (type(err).__name__, str(err)))
-            return
-        await self.bot.whisper("{} reloaded".format(extension_name))
-        return
+            await ctx.author.send("```py\n%s: %s\n```" %
+                                  (type(err).__name__, str(err)))
 
     @cmd.command()
-    async def list(self):
-        """List extensions loaded
-
-        Args:
-
-        Returns: None
-        """
-        await self.bot.whisper("Commands loaded : %s" %
-                               ", ".join(self.bot.cogs))
+    async def list(self, ctx):
+        """List extensions loaded"""
+        await ctx.author.send("Commands loaded : %s" %
+                              ", ".join(self.bot.cogs))
 
 
 def setup(bot):

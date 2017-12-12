@@ -15,8 +15,7 @@ class Rng(object):  # pylint: disable=too-few-public-methods
 
     @commands.command()
     async def dice(self, ctx, message):
-        """Roll a dice
-        Exemple : $dice 3d6"""
+        """Roll a dice"""
         result = dice.roll(message)
         if isinstance(result, list):
             result = sum(result)
@@ -24,12 +23,4 @@ class Rng(object):  # pylint: disable=too-few-public-methods
 
 
 def setup(bot):
-    """Add commands to the bot.
-
-    Args:
-        bot: Bot which will add the commands
-
-    Returns:
-        None
-    """
     bot.add_cog(Rng(bot))

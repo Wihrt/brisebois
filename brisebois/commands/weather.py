@@ -7,7 +7,6 @@ from discord import Embed
 from discord.ext import commands
 from discord.ext.commands.cooldowns import BucketType
 from requests import get
-from pymongo import MongoClient
 
 
 class Weather(object):  # pylint: disable=too-few-public-methods
@@ -15,19 +14,12 @@ class Weather(object):  # pylint: disable=too-few-public-methods
 
     def __init__(self, bot):
         self.bot = bot
-        self.key = self._get_api_key()
+        self.key = self.bot.get_api_key("weather")
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(60, "60.0", BucketType.default)
-    async def weather(self, ctx, *args) -> None:
-        """Give weathers informations on cities
-
-        Args:
-            ctx: Context of the message
-            args (str): Cities to get weather
-
-        Returns: None
-        """
+    async def weather(self, ctx, *args):
+        """Give weathers informations on cities"""
         payload = dict(q=" ".join(args), APPID=self.key, units="metric")
         json = get("http://api.openweathermap.org/data/2.5/weather",
                    params=payload).json()
@@ -49,16 +41,7 @@ class Weather(object):  # pylint: disable=too-few-public-methods
         message.add_field(
             name=":dash:",
             value="{} m/s".format(json["wind"]["speed"]))
-        await self.bot.send_message(ctx.message.channel, embed=message)
-
-    # MongoDB methods
-    @staticmethod
-    def _get_api_key() -> None:
-        client = MongoClient()
-        database = client.brisebois.api_keys
-        entry = database.find_one({"weather": {"$exists": True}})
-        return entry["weather"]
-
+        await ctx.channel.send(embed=message)
 
 def setup(bot):
     """Add commands to the bot.

@@ -6,7 +6,6 @@ from random import shuffle
 
 from discord import Embed
 from discord.ext import commands
-from pymongo import MongoClient
 
 
 class Quote(object):
@@ -15,65 +14,42 @@ class Quote(object):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(pass_context=True, no_pm=True)
+    @commands.group(no_pm=True)
     async def quote(self, ctx):
-        """Say a random quote
-
-        Args:
-            ctx: Context of the message
-
-        Returns: None
-        """
+        """Say a random quote"""
         if ctx.invoked_subcommand is None:
-            row = self._list_quote(ctx.message.server.id, one=True)
+            row = self._list_quote(ctx.guild, one=True)
             if row:
                 user = await self.bot.get_user_info(row[1])
                 message = Embed()
-                message.add_field(
-                    name="Random Quote",
-                    value="\"{}\" - {}".format(row[0], user.mention),
-                    inline=False)
-                await self.bot.send_message(ctx.message.channel, embed=message)
-        return
+                message.add_field(name="Random Quote", value="\"{}\" - {}".format(row[0], user.mention), inline=False)
+                await ctx.channel.send(embed=message)
 
-    @quote.command(pass_context=True)
+    @quote.command()
     async def add(self, ctx, quote, quoter=None):
         """Add a quote
 
         Args:
-            ctx: Context of the message
             quote (str): Message to be quoted
             quoter (str): User to be associated with the quote
-
-        Returns: None
         """
         if len(ctx.message.mentions) is 1:
-            server, quoter = ctx.message.server.id, ctx.message.mentions[0].id
-            result = self._add_quote(server, quote, quoter)
+            guild, quoter = ctx.guild, ctx.message.mentions[0]
+            result = self._add_quote(guild, quote, quoter)
             if result:
-                await self.bot.say("Quote added")
+                await ctx.channel.send("Quote added")
 
-    @quote.command(pass_context=True, name="del")
+    @quote.command(name="del")
     async def delete(self, ctx, message):
-        """Delete a quote
-
-        Args:
-            ctx: Context of the message
-            message (str): Quote or quote associated to the user to be deleted
-
-        Returns: None
-        """
-        server = ctx.message.server.id
+        """Delete a quote"""
         if len(ctx.message.mentions) is 1:  # There are mentions in the message
-            result = self._del_quote(server, user=ctx.message.mentions[0].id)
+            result = self._del_quote(ctx.guild, user=ctx.message.mentions[0].id)
         else:  # It is a quote
-            result = self._del_quote(server, quote=message)
+            result = self._del_quote(ctx.guild, quote=message)
         if result:
-            await self.bot.say("Quote deleted")
+            await ctx.channel.send("Quote deleted")
 
-    @quote.command(pass_context=True,
-                   no_pm=True,
-                   help="List all quotes")
+    @quote.command(no_pm=True)
     async def list(self, ctx, quoter=None):
         """List all quotes
 
@@ -83,17 +59,16 @@ class Quote(object):
 
         Returns: None
         """
-        server = ctx.message.server.id
-        title = "Quote from {}".format(ctx.message.server.name)
+        title = "Quote from {}".format(ctx.guild.name)
         if quoter:
             if len(ctx.message.mentions) is 1:
-                quoter = ctx.message.mentions[0].id
+                quoter = ctx.message.mentions[0]
                 user = await self.bot.get_user_info(quoter)
                 title = "Quote from {}".format(user.display_name)
         content = str()
-        rows = self._list_quote(server, quoter)
+        rows = self._list_quote(ctx.guild, quoter)
         if rows:
-            for quote, user in self._list_quote(server, quoter):
+            for quote, user in self._list_quote(ctx.guild.name, quoter):
                 user = await self.bot.get_user_info(user)
                 content += "\"{}\" - {}\n".format(quote, user.mention)
             message = Embed()
@@ -101,24 +76,21 @@ class Quote(object):
             await self.bot.send_message(ctx.message.channel, embed=message)
 
     # MongoDB methods
-    @staticmethod
-    def _add_quote(server, quote, user=None):
-        quotes = MongoClient().brisebois.quotes
+    def _add_quote(self, server, quote, user=None):
+        quotes = self.bot.mongo.brisebois.quotes
         doc = dict(server=server, user=user, quote=quote)
         result = quotes.insert_one(doc)
         return result.inserted_id
 
-    @staticmethod
-    def _del_quote(server, quote=None, user=None):
-        quotes = MongoClient().brisebois.quotes
+    def _del_quote(self, server, quote=None, user=None):
+        quotes = self.bot.mongo.brisebois.quotes
         search = dict(server=server, quote=quote, user=user)
         search = {k: v for k, v in search.items() if v}
         result = quotes.delete_many(search)
         return result.deleted_count
 
-    @staticmethod
-    def _list_quote(server, user=None, one=False):
-        quotes = MongoClient().brisebois.quotes
+    def _list_quote(self, server, user=None, one=False):
+        quotes = self.bot.mongo.brisebois.quotes
         search = dict(server=server, user=user)
         search = {k: v for k, v in search.items() if v}
         results = quotes.find(search)
@@ -129,12 +101,4 @@ class Quote(object):
 
 
 def setup(bot):
-    """Add commands to the bot.
-
-    Args:
-        bot: Bot which will add the commands
-
-    Returns:
-        None
-    """
     bot.add_cog(Quote(bot))

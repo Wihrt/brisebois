@@ -3,7 +3,6 @@
 """Brisebois Discord Bot"""
 
 # Imports
-from datetime import datetime
 from logging import getLogger, FileHandler, StreamHandler, info, critical, INFO
 from os import environ
 from sys import stdout, stderr
@@ -19,7 +18,10 @@ BOT = BotMongo(command_prefix="$", pm_help=False,
                mongo_port=int(environ["MONGO_PORT"]))
 # Extensions to load
 EXTENSIONS = ["commands.fun",
-              "commands.rng"]
+              "commands.guess",
+              "commands.rng",
+              "commands.utils",
+              "commands.weather"]
 
 
 def init_logger(level=INFO):
@@ -45,32 +47,27 @@ async def on_ready():
     info('Username: ' + BOT.user.name)
     info('ID: ' + BOT.user.id)
     info('------')
-    if not hasattr(BOT, 'uptime'):
-        BOT.uptime = datetime.utcnow()
 
 
 @BOT.event
 async def on_command_error(ctx, error):
     """Called when a command send an error"""
+    message = Embed(color=Color.dark_red())
     if isinstance(error, errors.NoPrivateMessage):
-        await ctx.channel.send("This command cannot be used in private messages.")
+        text = ":warning: This command cannot be used in private messages."
     elif isinstance(error, errors.CommandOnCooldown):
-        await ctx.channel.send(
-            "This command is on cooldown, retry after {} seconds".format(
-                error.retry_after))
+        text = ":stopwatch: This command is on cooldown, retry after {:.2f} seconds".format(error.retry_after)
     elif isinstance(error, errors.DisabledCommand):
-        await ctx.channel.send("This command is disabled and cannot be used.")
+        text = "This command is disabled and cannot be used."
     elif isinstance(error, errors.CommandNotFound):
-        await ctx.channel.send("Unknown command. Use $help to get commands")
-        await ctx.message.delete()
+        text = ":grey_question: Unknown command. Use `{}help` to get commands".format(ctx.prefix)
     elif isinstance(error, errors.CommandInvokeError):
-        message = Embed(color=Color.red())
-        message.add_field(name="Error", value=":warning: The command has thrown an error. Use `$help {}` to see how to use it".format(ctx.command))
-        await ctx.channel.send(embed=message)
-        print('In {0.command.qualified_name}:'.format(ctx), file=stderr)
+        text = ":stop_sign: The command has thrown an error. Use `{}help {}` to see how to use it.".format(ctx.prefix, ctx.command)
+        critical('In {0.command.qualified_name}:'.format(ctx), file=stderr)
         print_tb(error.original.__traceback__)
-        print('{0.__class__.__name__}: {0}'.format(error.original),
-              file=stderr)
+        critical('{0.__class__.__name__}: {0}'.format(error.original),file=stderr)
+    message.add_field(name="Error", value=text, inline=False)
+    await ctx.channel.send(embed=message)
 
 
 if __name__ == '__main__':
