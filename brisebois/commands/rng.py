@@ -2,9 +2,9 @@
 
 """RNG Commands module"""
 
-from random import randint
 
 from discord.ext import commands
+import dice
 
 
 class Rng(object):  # pylint: disable=too-few-public-methods
@@ -14,21 +14,13 @@ class Rng(object):  # pylint: disable=too-few-public-methods
         self.bot = bot
 
     @commands.command()
-    async def dice(self, faces=6, number=1):
+    async def dice(self, ctx, message):
         """Roll a dice
-
-        Args:
-            faces (int): Number of faces of the dice
-            number (int): Number of dice
-
-        Return: None
-        """
-
-        value = 0
-        for dice in range(1, number + 1):
-            value += randint(1, faces)
-        await self.bot.say("Roll {0}d{1} = {2}".format(number, faces, value))
-        return
+        Exemple : $dice 3d6"""
+        result = dice.roll(message)
+        if isinstance(result, list):
+            result = sum(result)
+        await ctx.channel.send("Roll {0} = {1}".format(message, result))
 
 
 def setup(bot):

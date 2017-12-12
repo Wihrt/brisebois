@@ -69,7 +69,7 @@ Proposed answers : {}".format(", ".join(list(map(str, answers)))))
         return
 
     @guess.command()
-    @commands.cooldown(1, "360.0", BucketType.server)
+    @commands.cooldown(1, "360.0", BucketType.guild)
     async def word(self, ctx):
         """Launch a word guessing game
 
@@ -116,7 +116,7 @@ Proposed answers : {}".format(", ".join(answers)))
         return
 
     @guess.command()
-    @commands.cooldown(1, "15.0", BucketType.server)
+    @commands.cooldown(1, "15.0", BucketType.guild)
     async def trivia(self, ctx):
         """Give a random trivia question
         Args:
