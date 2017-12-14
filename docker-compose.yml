@@ -1,19 +1,21 @@
 version: '2'
 
 services:
-  bot:
-    build: .
-    networks:
-      - internal
-    volumes:
-      - bot-log:/brisebois/log
-    depends_on:
-      - mongo
+  # bot:
+  #   build: .
+  #   networks:
+  #     - internal
+  #   volumes:
+  #     - bot-log:/brisebois/log
+  #   depends_on:
+  #     - mongo
 
   mongo:
     image: mongo:3.6-jessie
     networks:
       - internal
+    ports:
+      - "27017:27017"
     volumes:
       - ./mongo:/docker-entrypoint-initdb.d/
       - mongo-conf:/data/configdb

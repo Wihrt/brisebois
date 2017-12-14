@@ -15,7 +15,7 @@ class BotMongo(bot.Bot):
         super(BotMongo, self).__init__(command_prefix, formatter, description,
                                        pm_help, **options)
         self.mongo = MongoClient(host=mongo_host, port=mongo_port,
-                                 connect=False)
+                                 connect=True)
 
     def get_api_key(self, key):
         """Get the specified API key
