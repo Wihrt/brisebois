@@ -2,7 +2,7 @@
 
 """Utils Commands and Functions module"""
 
-from datetime import datetime
+from logging import info
 from discord.ext import commands
 
 
@@ -14,13 +14,32 @@ class Utils(object):
 
     @commands.group()
     @commands.has_permissions(administrator=True)
-    async def cmd(self, ctx):
+    async def admin(self, ctx):
         """Administrative function"""
         if ctx.invoked_subcommand is None:
             await ctx.channel.send("No subcommand specified\nUse `{}help {}` to see the list of commands.".format(ctx.prefix, ctx.command))
             await ctx.message.delete()
 
-    @cmd.command()
+    @admin.command()
+    async def enable(self, ctx, cmd):
+        """Enables a command"""
+        command = self.bot.get_command(cmd)
+        command.enabled = True
+        await ctx.author.send("{} command enabled".format(cmd))
+
+    @admin.command()
+    async def disable(self, ctx, cmd):
+        """Disables a command"""
+        command = self.bot.get_command(cmd)
+        command.enabled = False
+        await ctx.author.send("{} command disabled".format(cmd))
+
+    @admin.command()
+    async def prefix(self, ctx, prefix):
+        self.bot.command_prefix = prefix
+        await ctx.channel.send("Prefix has been changed to {}".format(prefix))
+
+    @admin.command()
     async def load(self, ctx, extension_name):
         """Loads an extension"""
         extension_name = "commands." + extension_name
@@ -30,14 +49,14 @@ class Utils(object):
         except(AttributeError, ImportError) as err:
             await ctx.author.send("```py\n{}: {}\n```" .format(type(err).__name__, str(err)))
 
-    @cmd.command()
+    @admin.command()
     async def unload(self, ctx, extension_name):
         """Unloads an extension"""
         extension_name = "commands." + extension_name
         self.bot.unload_extension(extension_name)
         await ctx.author.send("{} unloaded.".format(extension_name))
 
-    @cmd.command()
+    @admin.command()
     async def reload(self, ctx, extension_name):
         """Reloads an extension"""
         extension_name = "commands." + extension_name
@@ -48,7 +67,9 @@ class Utils(object):
         except (AttributeError, ImportError) as err:
             await ctx.author.send("```py\n{}: {}\n```" .format(type(err).__name__, str(err)))
 
-    @cmd.command()
+
+
+    @admin.command()
     async def list(self, ctx):
         """List extensions loaded"""
         await ctx.author.send("Commands loaded : {}".format(", ".join(self.bot.cogs)))

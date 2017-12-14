@@ -54,7 +54,7 @@ async def on_ready():
 @BOT.event
 async def on_command_error(ctx, error):
     content = dict(color=Color.dark_red())
-    info(error)
+    critical(ctx.command, error)
     if isinstance(error, errors.NoPrivateMessage):
         content["fields"] = [dict(name="Error", value=":warning: This command cannot be used in private messages.", inline=False)]
     elif isinstance(error, errors.CommandOnCooldown):
@@ -64,7 +64,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, errors.CommandNotFound):
         content["fields"] = [dict(name="Error", value=":grey_question: Unknown command. Use `{}help` to get commands".format(ctx.prefix), inline=False)]
     elif isinstance(error, errors.MissingPermissions):
-        content["fields"] = [dict(name="Error", value=":no_entry_sign: You don't have `{}` to use this command".format(", ").join(error.missing_perms)]
+        content["fields"] = [dict(name="Error", value=":no_entry_sign: {}".format(error.message))]
     elif isinstance(error, errors.CommandInvokeError):
         content["fields"] = [dict(name="Error", value=":stop_sign: The command has thrown an error. Use `{}help {}` to see how to use it.".format(ctx.prefix, ctx.command), inline=False)]
         critical('In {0.command.qualified_name}:'.format(ctx))

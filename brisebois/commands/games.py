@@ -2,6 +2,7 @@
 
 """Games Commands module"""
 
+from asyncio import TimeoutError
 from html import unescape
 from random import shuffle
 

@@ -2,8 +2,6 @@
 
 """RPG Commands module"""
 
-from utils.embed import create_embed
-
 from discord.ext import commands
 import dice
 
@@ -20,9 +18,8 @@ class Rpg(object):
         result = dice.roll(msg)
         if isinstance(result, list):
             result = sum(result)
-        title = "Roll {0} = {1}".format(msg, result)
-        message = create_embed(title=title)
-        await ctx.channel.send(embed=message)
+        await ctx.channel.send("{} Roll {} = {}".format(ctx.author.mention, msg, result))
 
 def setup(bot):
+    """Add RPG commands to the Bot"""
     bot.add_cog(Rpg(bot))
