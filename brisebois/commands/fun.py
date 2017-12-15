@@ -21,6 +21,7 @@ class Fun(object):
         self._giphy_api_key = self.bot.get_api_key("giphy")
 
     # Commands
+    # -------------------------------------------------------------------------
     @commands.command(name="9gag")
     async def gag(self, ctx):
         """Send a random 9gag"""
@@ -42,7 +43,7 @@ class Fun(object):
         await ctx.channel.send(embed=message)
 
     @commands.command(aliases=["gif"])
-    async def giphy(self, ctx, search=str()):
+    async def giphy(self, ctx, *search):
         """Send a random GIF"""
         title, url = self._giphy("http://api.giphy.com/v1/gifs/random", self._giphy_api_key, search)
         message = create_embed(title=title, url=url)
@@ -77,6 +78,7 @@ class Fun(object):
         await ctx.channel.send(embed=message)
 
     # Static methods
+    # -------------------------------------------------------------------------
     @staticmethod
     def _danstonchat(url):
         response = get(url)
@@ -106,8 +108,8 @@ class Fun(object):
         payload = dict(api_key=api_key)
         title = "Random GIF"
         if search:
-            title = "Random \"{}\" GIF".format(search)
-            payload["tag"] = search
+            title = "Random \"{}\" GIF".format(" ".join(search))
+            payload["tag"] = " ".join(search)
         response = get(url, params=payload)
         r_json = response.json()
         return title, r_json["data"]["image_url"]

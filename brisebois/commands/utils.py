@@ -21,21 +21,22 @@ class Utils(object):
             await ctx.message.delete()
 
     @admin.command()
-    async def enable(self, ctx, cmd):
+    async def enable(self, ctx, *command):
         """Enables a command"""
-        command = self.bot.get_command(cmd)
-        command.enabled = True
-        await ctx.author.send("{} command enabled".format(cmd))
+        cmd = self.bot.get_command(" ".join(command))
+        cmd.enabled = True
+        await ctx.author.send("{} command enabled".format(command))
 
     @admin.command()
-    async def disable(self, ctx, cmd):
+    async def disable(self, ctx, *command):
         """Disables a command"""
-        command = self.bot.get_command(cmd)
-        command.enabled = False
-        await ctx.author.send("{} command disabled".format(cmd))
+        cmd = self.bot.get_command(" ".join(command))
+        cmd.enabled = False
+        await ctx.author.send("{} command disabled".format(command))
 
     @admin.command()
     async def prefix(self, ctx, prefix):
+        """Changes the prefix of commands"""
         self.bot.command_prefix = prefix
         await ctx.channel.send("Prefix has been changed to {}".format(prefix))
 
@@ -66,8 +67,6 @@ class Utils(object):
             await ctx.author.send("{} reloaded".format(extension_name))
         except (AttributeError, ImportError) as err:
             await ctx.author.send("```py\n{}: {}\n```" .format(type(err).__name__, str(err)))
-
-
 
     @admin.command()
     async def list(self, ctx):

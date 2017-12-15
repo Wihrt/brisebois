@@ -11,7 +11,7 @@ from traceback import print_tb
 from utils.botmongo import BotMongo
 from utils.embed import create_embed
 
-from discord import Color, Embed
+from discord import Color
 from discord.ext.commands import errors
 
 # Create the bot

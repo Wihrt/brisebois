@@ -16,6 +16,8 @@ class Misc(object):  # pylint: disable=too-few-public-methods
         self.bot = bot
         self._weather_api_key = self.bot.get_api_key("weather")
 
+    # Commands
+    # -------------------------------------------------------------------------
     @commands.command()
     @commands.cooldown(60, "60.0", BucketType.default)
     async def weather(self, ctx, *search):
@@ -24,6 +26,8 @@ class Misc(object):  # pylint: disable=too-few-public-methods
         message = create_embed(**content)
         await ctx.channel.send(embed=message)
 
+    # Static methods
+    # -------------------------------------------------------------------------
     @staticmethod
     def _weather(url, api_key, search):
         payload = dict(q=" ".join(search), APPID=api_key, units="metric")

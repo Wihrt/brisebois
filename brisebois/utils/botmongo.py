@@ -8,7 +8,6 @@ from pymongo import MongoClient
 class BotMongo(bot.Bot):
     """Extends the standard bot with Mongo capabilities"""
 
-    #pylint: disable-msg=too-many-arguments
     def __init__(self, command_prefix, formatter=None, description=None,
                  pm_help=False, mongo_host="localhost", mongo_port=27017,
                  **options):
