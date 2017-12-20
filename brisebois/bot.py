@@ -16,8 +16,8 @@ from discord.ext.commands import errors
 
 # Create the bot
 # BOT = BotMongo(command_prefix="$", pm_help=False,
-#                mongo_host=environ["MONGO_HOST"],
-#                mongo_port=int(environ["MONGO_PORT"]))
+            #    mongo_host=environ["MONGO_HOST"],
+            #    mongo_port=int(environ["MONGO_PORT"]))
 BOT = BotMongo(command_prefix="$", pm_help=False)
 # Extensions to load
 EXTENSIONS = ["commands.fun",
@@ -64,7 +64,9 @@ async def on_command_error(ctx, error):
     elif isinstance(error, errors.CommandNotFound):
         content["fields"] = [dict(name="Error", value=":grey_question: Unknown command. Use `{}help` to get commands".format(ctx.prefix), inline=False)]
     elif isinstance(error, errors.MissingPermissions):
-        content["fields"] = [dict(name="Error", value=":no_entry_sign: {}".format(error.message))]
+        content["fields"] = [dict(name="Error", value=":no_entry_sign: {}".format(error.message), inline=False)]
+    elif isinstance(error, errors.MissingRequiredArgument):
+        content["fields"] = [dict(name="Error", value="An argument is missing", inline=False)]
     elif isinstance(error, errors.CommandInvokeError):
         content["fields"] = [dict(name="Error", value=":stop_sign: The command has thrown an error. Use `{}help {}` to see how to use it.".format(ctx.prefix, ctx.command), inline=False)]
         critical('In {0.command.qualified_name}:'.format(ctx))

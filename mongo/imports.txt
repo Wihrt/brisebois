@@ -1,2 +1,3 @@
 # Database;Collection;JSON File
 brisebois;api_keys;/docker-entrypoint-initdb.d/api_keys.json
+brisebois;cah_cards;/docker-entrypoint-initdb.d/cah.json
