@@ -3,14 +3,13 @@
 """Fun Commands module"""
 
 # Imports
-from logging import info
 from random import randint
-
-from utils.embed import create_embed
 
 from bs4 import BeautifulSoup
 from discord.ext import commands
-from requests import get, post
+
+from utils.embed import create_embed
+from utils.api import ApiKey
 
 
 class Fun(object):
@@ -18,126 +17,124 @@ class Fun(object):
 
     def __init__(self, bot):
         self.bot = bot
-        self._giphy_api_key = self.bot.get_api_key("giphy")
+        self.mongo_client = self.bot.mongo
+        self.mongo_session = self.mongo_client.start_session()
+        self.giphy_key = ApiKey(self.mongo_client, self.mongo_session, "giphy").value
 
     # Commands
     # -------------------------------------------------------------------------
     @commands.command(name="9gag")
+    @commands.guild_only()
     async def gag(self, ctx):
         """Send a random 9gag"""
-        response = get("https://9gag.com/random")
-        await ctx.channel.send(response.url)
+        response = await self.bot.session.get("https://9gag.com/random")
+        async with response:
+            await ctx.channel.send(response.url)
 
     @commands.command(aliases=["dtc"])
+    @commands.guild_only()
     async def danstonchat(self, ctx):
-        """Send random anecdocte from Dans Ton Chat"""
-        content = self._danstonchat("https://danstonchat.com/random.html")
-        message = create_embed(fields=[content], thumbnail="https://pbs.twimg.com/profile_images/686583650708811776/0ApBhP7G.png")
-        await ctx.channel.send(embed=message)
+        """Send a random anecdocte from Dans Ton Chat"""
+        response = await self.bot.session.get("https://danstonchat.com/random.html")
+        async with response:
+            content = await response.text()
+            soup = BeautifulSoup(content, "html.parser")
+            quote = soup.find_all("div", class_="item-content")[randint(1, 25) - 1]
+            content = str()
+            for elem in quote.a.contents:
+                if elem.name == "span":
+                    content += "`" + elem.getText() + "`"
+                if elem.name == "br":
+                    content += "\n"
+                if not elem.name and elem != " ":
+                    content += elem
+            field = dict(name="Random DTC", value=content, inline=False)
+            message = create_embed(dict(fields=field, \
+thumbnail="https://pbs.twimg.com/profile_images/686583650708811776/0ApBhP7G.png"))
+            await ctx.channel.send(embed=message)
 
     @commands.command(aliases=["fml"])
+    @commands.guild_only()
     async def fuckmylife(self, ctx):
-        """Send random anecdocte from Fuck My Life"""
-        content = self._fuckmylife("FML", "https://www.fmylife.com/random")
-        message = create_embed(fields=[content], thumbnail="https://99clonescripts.com/wp-content/uploads/2014/05/fml-logo.jpg")
-        await ctx.channel.send(embed=message)
+        """Send a random anecdocte from Fuck My Life"""
+        response = await self.bot.session.get("https://www.fmylife.com/random")
+        async with response:
+            content = await response.text()
+            soup = BeautifulSoup(content, "html.parser")
+            tag = soup.find_all("p", class_="block")[0]
+            field = dict(name="Random {}".format("FML"), value=tag.a.getText(), inline=False)
+            message = create_embed(dict(fields=field, \
+thumbnail="https://99clonescripts.com/wp-content/uploads/2014/05/fml-logo.jpg"))
+            await ctx.channel.send(embed=message)
 
     @commands.command(aliases=["gif"])
-    async def giphy(self, ctx, *search):
-        """Send a random GIF"""
-        title, url = self._giphy("http://api.giphy.com/v1/gifs/random", self._giphy_api_key, search)
-        message = create_embed(title=title, url=url)
-        await ctx.channel.send(embed=message)
-
-    @commands.command(aliases=["ljdc"])
-    async def lesjoiesducode(self, ctx):
-        """Send a random GIF from Les Joies du Code"""
-        title, url = self._lesjoiesducode("http://lesjoiesducode.fr/random")
-        message = create_embed(title=title, url=url)
-        await ctx.channel.send(embed=message)
-
-    @commands.command()
-    async def quote(self, ctx):
-        """Send a random quote"""
-        quote, author = self._quote("http://api.forismatic.com/api/1.0/")
-        message = create_embed(footer=author, fields=[quote])
-        await ctx.channel.send(embed=message)
-
-    @commands.command(aliases=["vdm"])
-    async def viedemerde(self, ctx):
-        """Send random anecdocte from Vie de Merde"""
-        content = self._fuckmylife("VDM", "https://www.viedemerde.fr/aleatoire")
-        message = create_embed(fields=[content], thumbnail="https://upload.wikimedia.org/wikipedia/commons/f/fc/Logo_vdm.png")
-        await ctx.channel.send(embed=message)
-
-    @commands.command()
-    async def xkcd(self, ctx):
-        """Send a random XKCD"""
-        title, url = self._xkcd("https://c.xkcd.com/random/comic/")
-        message = create_embed(title=title, url=url)
-        await ctx.channel.send(embed=message)
-
-    # Static methods
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _danstonchat(url):
-        response = get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, "html.parser")
-        quote = soup.find_all("div", class_="item-content")[randint(1, 25) - 1]
-        content = str()
-        for elem in quote.a.contents:
-            if elem.name == "span":
-                content += "`" + elem.getText() + "`"
-            if elem.name == "br":
-                content += "\n"
-            if not elem.name and elem != " ":
-                content += elem
-        return dict(name="Random DTC", value=content, inline=False)
-
-    @staticmethod
-    def _fuckmylife(name, url):
-        response = get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, "html.parser")
-        tag = soup.find_all("p", class_="block")[0]
-        return dict(name="Random {}".format(name.upper()), value=tag.a.getText(), inline=False)
-
-    @staticmethod
-    def _giphy(url, api_key, search):
-        payload = dict(api_key=api_key)
+    @commands.guild_only()
+    async def giphy(self, ctx, *, search=None):
+        """Send a random GIF
+        You can research a specific tag as well"""
+        params = dict(api_key=self.giphy_key)
         title = "Random GIF"
         if search:
-            title = "Random \"{}\" GIF".format(" ".join(search))
-            payload["tag"] = " ".join(search)
-        response = get(url, params=payload)
-        r_json = response.json()
-        return title, r_json["data"]["image_url"]
+            params["tag"] = search
+            title = "Random \"{}\" GIF".format(search)
+        response = await self.bot.session.get("http://api.giphy.com/v1/gifs/random", params=params)
+        async with response:
+            content = await response.json()
+            message = create_embed(dict(title=title, url=content["data"]["image_url"]))
+            await ctx.channel.send(embed=message)
 
-    @staticmethod
-    def _lesjoiesducode(url):
-        response = get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, "html.parser")
-        title = soup.find_all("h1", class_="blog-post-title")[0].getText().strip().capitalize()
-        img = soup.find_all("div", class_="blog-post-content")[0].find_all("img")[0]["src"]
-        return title, img
+    @commands.command(aliases=["ljdc"])
+    @commands.guild_only()
+    async def lesjoiesducode(self, ctx):
+        """Send a random GIF from Les Joies du Code"""
+        response = await self.bot.session.get("http://lesjoiesducode.fr/random")
+        async with response:
+            content = await response.text()
+            soup = BeautifulSoup(content, "html.parser")
+            title = soup.find_all("h1", class_="blog-post-title")[0].getText().strip().capitalize()
+            url = soup.find_all("div", class_="blog-post-content")[0].find_all("img")[0]["src"]
+            message = create_embed(dict(title=title, url=url))
+            await ctx.channel.send(embed=message)
 
-    @staticmethod
-    def _quote(url):
-        payload = dict(method="getQuote", format="text", lang="en")
-        response = post(url, params=payload)
-        response.raise_for_status()
-        quote, author = response.text.rstrip(")").split("(")
-        return dict(name="Random quote", value=quote, inline=False), dict(text=author)
+    @commands.command()
+    @commands.guild_only()
+    async def quote(self, ctx):
+        """Send a random quote"""
+        params = dict(method="getQuote", format="text", lang="en")
+        response = await self.bot.session.post("http://api.forismatic.com/api/1.0/", params=params)
+        async with response:
+            content = await response.text()
+            quote, author = content.rstrip(")").split("(")
+            quote, author = dict(name="Random quote", value=quote, inline=False), dict(text=author)
+            message = create_embed(dict(footer=author, fields=quote))
+            await ctx.channel.send(embed=message)
 
-    @staticmethod
-    def _xkcd(url):
-        response = get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, "html.parser")
-        img = soup.find_all("div", id="comic")[0].find_all("img")[0]
-        return img["title"], "https:" + img["src"]
+    @commands.command(aliases=["vdm"])
+    @commands.guild_only()
+    async def viedemerde(self, ctx):
+        """Send a random anecdocte from Vie de Merde"""
+        response = await self.bot.session.get("http://www.viedemerde.fr/aleatoire")
+        async with response:
+            content = await response.text()
+            soup = BeautifulSoup(content, "html.parser")
+            tag = soup.find_all("p", class_="block")[0]
+            field = dict(name="Random {}".format("VDM"), value=tag.a.getText(), inline=False)
+            message = create_embed(dict(fields=field, \
+thumbnail="https://upload.wikimedia.org/wikipedia/commons/f/fc/Logo_vdm.png"))
+            await ctx.channel.send(embed=message)
+
+    @commands.command()
+    @commands.guild_only()
+    async def xkcd(self, ctx):
+        """Send a random XKCD comic"""
+        response = await self.bot.session.get("https://c.xkcd.com/random/comic/")
+        async with response:
+            content = await response.text()
+            soup = BeautifulSoup(content, "html.parser")
+            img = soup.find_all("div", id="comic")[0].find_all("img")[0]
+            title, url = img["title"], "https:" + img["src"]
+            message = create_embed(dict(title=title, url=url))
+            await ctx.channel.send(embed=message)
 
 
 def setup(bot):

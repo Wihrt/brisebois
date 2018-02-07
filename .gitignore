@@ -100,4 +100,6 @@ ENV/
 # mypy
 .mypy_cache/
 
-mongo/api_keys.json
+log/*
+ext/cah.json
+mongo/*.json

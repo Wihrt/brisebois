@@ -1,50 +1,59 @@
 #!/bin/env python
 
-"""Brisebois Discord Bot"""
+"""Itoxx Discord Bot"""
 
 # Imports
-from logging import getLogger, FileHandler, StreamHandler, info, critical, INFO
-from os import environ
-from sys import stdout, stderr
+from logging import getLogger, Formatter, FileHandler, StreamHandler, info, critical, INFO
+# from os import environ
+from sys import stdout
 from traceback import print_tb
 
-from utils.botmongo import BotMongo
-from utils.embed import create_embed
-
+from aiohttp import ClientSession
 from discord import Color
 from discord.ext.commands import errors
+from discord.ext.commands.bot import Bot
+from pymongo import MongoClient
 
-# Create the bot
-# BOT = BotMongo(command_prefix="$", pm_help=False,
-            #    mongo_host=environ["MONGO_HOST"],
-            #    mongo_port=int(environ["MONGO_PORT"]))
-BOT = BotMongo(command_prefix="$", pm_help=False)
-# Extensions to load
-EXTENSIONS = ["commands.fun",
-              "commands.games",
-              "commands.misc",
-              "commands.rpg",
-              "commands.utils"]
+from utils.api import ApiKey
+from utils.embed import create_embed
 
+BOT = Bot(command_prefix="$", pm_help=False)  # Create the bot
+BOT.mongo = MongoClient(host="localhost",
+                        port=27017,
+                        connect=True)  # Add Mongo capabilities
+BOT.session = ClientSession(raise_for_status=True)  # Add HTTP capabilities
+
+# Extensions to load at start
+EXTENSIONS = ["commands.admin", "commands.cah"]
 
 def init_logger(level=INFO):
-    """Initialize the logger and sets it to the level specified
+    """Set the logger to the desired level
 
     Keyword Arguments:
-        level {int} -- Level of the logger (default: {INFO})
+        level {int} -- Level of logging (default: {INFO})
     """
     discord = getLogger("discord")
     discord.setLevel(level)
     root = getLogger()
     root.setLevel(level)
+    out_formatter = Formatter("%(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s")
+    file_formatter = Formatter(
+        "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s")
     out_handler = StreamHandler(stream=stdout)
-    file_handler = FileHandler(filename="log/bot.log", encoding="utf-8", mode="w")
+    out_handler.setFormatter(out_formatter)
+    file_handler = FileHandler(filename="log/bot.log", encoding="utf-8", mode="a")
+    file_handler.setFormatter(file_formatter)
     root.addHandler(out_handler)
     root.addHandler(file_handler)
 
 
 @BOT.event
 async def on_ready():
+    """Triggered when the bot starts
+
+    Decorators:
+        BOT.event
+    """
     info('Logged in as:')
     info('Username: {}'.format(BOT.user.name))
     info('ID: {}'.format(str(BOT.user.id)))
@@ -53,26 +62,43 @@ async def on_ready():
 
 @BOT.event
 async def on_command_error(ctx, error):
-    content = dict(color=Color.dark_red())
+    """Triggered when a command send an error
+
+    Decorators:
+        BOT.event
+
+    Arguments:
+        ctx {Context} -- Context of the message
+        error {Exception} -- Discord error
+    """
+    content = dict(colour=Color.dark_red())
     critical(ctx.command, error)
+    field = dict(name="Error", inline=False)
     if isinstance(error, errors.NoPrivateMessage):
-        content["fields"] = [dict(name="Error", value=":warning: This command cannot be used in private messages.", inline=False)]
+        field["value"] = ":warning: This command cannot be used in private messages."
     elif isinstance(error, errors.CommandOnCooldown):
-        content["fields"] = [dict(name="Error", value=":stopwatch: This command is on cooldown, retry after {:.2f} seconds".format(error.retry_after), inline=False)]
+        field["value"] = ":stopwatch: This command is on cooldown, \
+retry after {:.2f} seconds".format(error.retry_after)
     elif isinstance(error, errors.DisabledCommand):
-        content["fields"] = [dict(name="Error", value="This command is disabled and cannot be used.", inline=False)]
+        field["value"] = "This command is disabled and cannot be used."
     elif isinstance(error, errors.CommandNotFound):
-        content["fields"] = [dict(name="Error", value=":grey_question: Unknown command. Use `{}help` to get commands".format(ctx.prefix), inline=False)]
+        field["value"] = ":grey_question: Unknown command. \
+Use `{}help` to get commands".format(ctx.prefix)
     elif isinstance(error, errors.MissingPermissions):
-        content["fields"] = [dict(name="Error", value=":no_entry_sign: {}".format(error.message), inline=False)]
+        field["value"] = ":no_entry_sign: {}".format(error.message)
     elif isinstance(error, errors.MissingRequiredArgument):
-        content["fields"] = [dict(name="Error", value="An argument is missing", inline=False)]
+        field["value"] = "An argument is missing"
+    elif isinstance(error, errors.CheckFailure):
+        field["value"] = ":no_entry_sign: At least 1 check has failed"
+    elif isinstance(error, errors.NotOwner):
+        field["value"] = ":no_entry_sign: You are not the owner of the bot"
     elif isinstance(error, errors.CommandInvokeError):
-        content["fields"] = [dict(name="Error", value=":stop_sign: The command has thrown an error. Use `{}help {}` to see how to use it.".format(ctx.prefix, ctx.command), inline=False)]
+        field["value"] = ":stop_sign: The command {} has thrown an error.".format(ctx.command)
         critical('In {0.command.qualified_name}:'.format(ctx))
         print_tb(error.original.__traceback__)
         critical('{0.__class__.__name__}: {0}'.format(error.original))
-    message = create_embed(**content)
+    content["fields"] = field
+    message = create_embed(content)
     await ctx.channel.send(embed=message)
 
 
@@ -84,4 +110,5 @@ if __name__ == '__main__':
         except ImportError as err:
             exc = '{}: {}'.format(type(err).__name__, err)
             critical('Failed to load extension {}\n{}'.format(extension, exc))
-    BOT.run(BOT.get_api_key("discord"))
+    TOKEN = ApiKey(BOT.mongo, BOT.mongo.start_session(), "discord")
+    BOT.run(TOKEN.value)

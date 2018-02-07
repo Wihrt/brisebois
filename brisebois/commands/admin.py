@@ -1,36 +1,45 @@
 #!/bin/env python
 
-"""Utils Commands and Functions module"""
+"""Admin Commands and Functions module"""
 
-from logging import info
 from discord.ext import commands
 
+from utils.checks import private_only
 
-class Utils(object):
-    """Implements Utils commands"""
+
+class Admin(object):
+    """Implements Admin commands"""
 
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group()
-    @commands.has_permissions(administrator=True)
+    @commands.group(hidden=True)
+    @commands.is_owner()
+    @commands.check(private_only)
     async def admin(self, ctx):
-        """Administrative function"""
+        """Administrative function
+        Can only be invoked by the owner of the bot"""
         if ctx.invoked_subcommand is None:
-            await ctx.channel.send("No subcommand specified\nUse `{}help {}` to see the list of commands.".format(ctx.prefix, ctx.command))
+            await ctx.channel.send("No subcommand specified\n\
+Use `{}help {}` to see the list of commands.".format(ctx.prefix, ctx.command))
             await ctx.message.delete()
 
     @admin.command()
-    async def enable(self, ctx, *command):
+    async def stop(self, ctx):
+        """Stop the bot"""
+        await self.bot.logout()
+
+    @admin.command()
+    async def enable(self, ctx, *, command):
         """Enables a command"""
-        cmd = self.bot.get_command(" ".join(command))
+        cmd = self.bot.get_command(command)
         cmd.enabled = True
         await ctx.author.send("{} command enabled".format(command))
 
     @admin.command()
-    async def disable(self, ctx, *command):
+    async def disable(self, ctx, *, command):
         """Disables a command"""
-        cmd = self.bot.get_command(" ".join(command))
+        cmd = self.bot.get_command(command)
         cmd.enabled = False
         await ctx.author.send("{} command disabled".format(command))
 
@@ -59,7 +68,7 @@ class Utils(object):
 
     @admin.command()
     async def reload(self, ctx, extension_name):
-        """Reloads an extension"""
+        """"Reloads an extension"""
         extension_name = "commands." + extension_name
         try:
             self.bot.unload_extension(extension_name)
@@ -76,4 +85,4 @@ class Utils(object):
 
 def setup(bot):
     """Add commands to the bot"""
-    bot.add_cog(Utils(bot))
+    bot.add_cog(Admin(bot))
