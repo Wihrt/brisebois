@@ -57,7 +57,7 @@ thumbnail="https://pbs.twimg.com/profile_images/686583650708811776/0ApBhP7G.png"
     @commands.guild_only()
     async def fuckmylife(self, ctx):
         """Send a random anecdocte from Fuck My Life"""
-        response = await self.bot.session.get("https://www.fmylife.com/random")
+        response = await self.bot.session.get("http://www.fmylife.com/random")
         async with response:
             content = await response.text()
             soup = BeautifulSoup(content, "html.parser")

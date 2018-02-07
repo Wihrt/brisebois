@@ -36,9 +36,9 @@ def init_logger(level=INFO):
     discord.setLevel(level)
     root = getLogger()
     root.setLevel(level)
-    out_formatter = Formatter("%(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s")
+    out_formatter = Formatter("%(levelname)7s [%(name)s.%(funcName)s] %(message)s")
     file_formatter = Formatter(
-        "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s")
+        "[%(asctime)s] %(levelname)7s [%(name)s.%(funcName)s] %(message)s")
     out_handler = StreamHandler(stream=stdout)
     out_handler.setFormatter(out_formatter)
     file_handler = FileHandler(filename="log/bot.log", encoding="utf-8", mode="a")
